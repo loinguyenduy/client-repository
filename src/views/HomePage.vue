@@ -1,0 +1,450 @@
+<!-- frontend/src/views/HomePage.vue -->
+<template>
+  <div class="home-page">
+    <!-- Hero Section -->
+    <section class="hero-section">
+      <div class="hero-content">
+        <h1>Welcome to Viet Flavor</h1>
+        <p class="tagline">
+          Bringing the rich flavors of Vietnam to your table, one bowl at a
+          time.
+        </p>
+        <router-link to="/menu" class="btn-primary"
+          >Explore Our Menu</router-link
+        >
+      </div>
+      <div class="hero-image">
+        <img
+          src="@/assets/restaurant1.png"
+          alt="Restaurant Interior"
+        />
+      </div>
+    </section>
+
+    <!-- About Section -->
+    <section class="about-section content-section">
+      <h2>About Us</h2>
+          <div class="about-content-wrapper">
+        <div class="about-image">
+          <img
+            src="@/assets/pho1.png"
+            alt="Delicious Vietnamese Dish"
+          />
+        </div>
+        <div class="about-text">
+          <p>
+            Welcome to Viet Flavor – where the authentic traditions of
+            Vietnamese cuisine are preserved and shared. We believe that every
+            dish isn't just a combination of fresh ingredients, but a story of
+            culture, family, and cherished childhood memories. <br />
+            At Viet Flavor, we take pride in offering you rich, authentic
+            Vietnamese dishes, prepared with the freshest, most carefully
+            selected ingredients, and with the utmost dedication from our
+            culinary team. From a steaming bowl of flavorful pho and refreshing
+            spring rolls to familiar street food delights, each dish is a
+            journey into the true essence of Vietnamese gastronomy. <br />
+            Come and experience a meal at Viet Flavor that feels just like home,
+            where you don't just enjoy the food, but also feel the love and
+            connection to our homeland's cuisine.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Featured Products Section -->
+    <section class="featured-products-section content-section">
+      <h2>Our Featured Dishes</h2>
+      <div v-if="isLoadingFeatured" class="loading-spinner">
+        Loading featured dishes...
+      </div>
+      <div
+        v-else-if="featuredProducts.length === 0"
+        class="no-products-message"
+      >
+        No featured dishes available at the moment.
+      </div>
+      <div v-else class="featured-products-grid">
+        <div
+          v-for="product in featuredProducts"
+          :key="product._id"
+          class="product-card"
+        >
+          <img
+            :src="getBackendImageUrl(product.image)"
+            :alt="product.name"
+            class="product-image"
+          />
+          <h3 class="product-name">{{ product.name }}</h3>
+          <p class="product-price">${{ product.price.toFixed(2) }}</p>
+          <router-link :to="`/products/${product._id}`" class="btn-secondary"
+            >View Details</router-link
+          >
+        </div>
+      </div>
+    </section>
+
+    <!-- Phần Giờ mở cửa (Đã thay thế Contact Info) -->
+    <section class="opening-hours-section content-section">
+      <h2>Opening Hours</h2>
+      <div class="hours-details">
+        <p><strong>Monday - Friday:</strong> 11:00 AM - 10:00 PM</p>
+        <p><strong>Saturday - Sunday:</strong> 12:00 PM - 11:00 PM</p>
+      </div>
+    </section>
+
+    <!-- Google Map Section -->
+    <section class="map-section content-section">
+      <h2>Find Us Here</h2>
+      <div class="google-map-container">
+        <iframe
+          width="100%"
+          height="450"
+          frameborder="0"
+          style="border: 0"
+          allowfullscreen=""
+          loading="lazy"
+          referrerpolicy="no-referrer-when-downgrade"
+          src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3724.2134973252655!2d105.78781021191256!3d21.024141787854322!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3135ab9f983e67af%3A0x41721163aff0f497!2sChung%20c%C6%B0%20Golden%20Park!5e0!3m2!1svi!2s!4v1752768721711!5m2!1svi!2s"
+        ></iframe>
+      </div>
+      <p class="map-note">Click on the map for directions.</p>
+    </section>
+  </div>
+</template>
+
+<script>
+import apiClient from "@/helpers/api";
+
+export default {
+  name: "HomePage",
+  data() {
+    return {
+      featuredProducts: [],
+      isLoadingFeatured: false,
+    };
+  },
+  async created() {
+    await this.fetchFeaturedProducts();
+  },
+  methods: {
+    async fetchFeaturedProducts() {
+      this.isLoadingFeatured = true;
+      try {
+        const response = await apiClient.get(
+          "/products?isFeatured=true&limit=6"
+        );
+        this.featuredProducts = response.data.products;
+      } catch (error) {
+        console.error("Error fetching featured products:", error);
+        this.featuredProducts = [];
+      } finally {
+        this.isLoadingFeatured = false;
+      }
+    },
+    // Function to get the full image URL from the backend
+    getBackendImageUrl(imagePath) {
+      const backendBaseUrl = apiClient.defaults.baseURL.replace("/api", "");
+      if (!imagePath || imagePath === "/uploads/placeholder.jpg") {
+        return "https://via.placeholder.com/200x200/f0f0f0/cccccc?text=No+Image";
+      }
+      if (imagePath.startsWith("http://") || imagePath.startsWith("https://")) {
+        return imagePath;
+      }
+      return `${backendBaseUrl}${
+        imagePath.startsWith("/") ? "" : "/"
+      }${imagePath}`;
+    },
+  },
+};
+</script>
+
+<style scoped>
+/* CSS cho trang chủ */
+.home-page {
+  background-color: var(--bg-light);
+  padding-bottom: 50px;
+}
+
+/* Hero Section */
+.hero-section {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 40px;
+  padding: 60px 5%;
+  background-color: #f8f8f8;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+.hero-content {
+  flex: 1;
+  text-align: left;
+  max-width: 500px;
+}
+
+.hero-content h1 {
+  font-size: 3.5em;
+  color: var(--primary-color);
+  margin-bottom: 15px;
+  font-family: var(--font-family-heading);
+  line-height: 1.1;
+}
+
+.hero-content .tagline {
+  font-size: 1.5em;
+  color: var(--light-text-color);
+  margin-bottom: 30px;
+  font-family: var(--font-family-body);
+}
+
+.btn-primary {
+  display: inline-block;
+  background-color: var(--primary-color);
+  color: #fff;
+  padding: 15px 30px;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: bold;
+  font-size: 1.1em;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.btn-primary:hover {
+  background-color: darken(var(--primary-color), 10%);
+  transform: translateY(-2px);
+}
+
+.hero-image {
+  flex: 1;
+  max-width: 600px;
+  text-align: right;
+}
+
+.hero-image img {
+  max-width: 100%;
+  border-radius: 10px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+/* Common Content Sections */
+.content-section {
+  padding: 60px 5%;
+  text-align: center;
+}
+
+.content-section h2 {
+  font-size: 2.5em;
+  color: var(--primary-color);
+  margin-bottom: 40px;
+  font-family: var(--font-family-heading);
+}
+
+/* About Section */
+.about-section p {
+  max-width: 800px;
+  margin: 0 auto;
+  font-size: 1.1em;
+  line-height: 1.6;
+  color: var(--text-color);
+}
+
+/* Featured Products Section */
+.featured-products-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 30px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.product-card {
+  background-color: #fff;
+  border-radius: 10px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+  padding: 20px;
+  text-align: center;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.product-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+}
+
+.product-image {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+  border-radius: 8px;
+  margin-bottom: 15px;
+}
+
+.product-name {
+  font-size: 1.4em;
+  color: var(--text-color);
+  margin-bottom: 10px;
+  font-family: var(--font-family-heading);
+}
+
+.product-price {
+  font-size: 1.2em;
+  color: var(--primary-color);
+  font-weight: bold;
+  margin-bottom: 20px;
+}
+
+.btn-secondary {
+  display: inline-block;
+  background-color: #6c757d;
+  color: #fff;
+  padding: 10px 20px;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: bold;
+  transition: background-color 0.3s ease;
+}
+
+.btn-secondary:hover {
+  background-color: darken(#6c757d, 10%);
+}
+
+.loading-spinner,
+.no-products-message {
+  font-size: 1.2em;
+  color: var(--light-text-color);
+  margin-top: 20px;
+}
+
+/* Opening Hours Section */
+.opening-hours-section {
+  padding: 60px 5%;
+  text-align: center;
+}
+
+.opening-hours-section h2 {
+  font-size: 2.5em;
+  color: var(--primary-color);
+  margin-bottom: 40px;
+  font-family: var(--font-family-heading);
+}
+
+.hours-details {
+  max-width: 600px;
+  margin: 0 auto;
+  text-align: center; /* Căn giữa nội dung giờ mở cửa */
+  font-size: 1.1em;
+  line-height: 1.8;
+  color: var(--text-color);
+}
+
+.hours-details strong {
+  color: var(--primary-color);
+}
+
+/* Map Section */
+.google-map-container {
+  width: 100%;
+  max-width: 1000px;
+  margin: 0 auto;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  margin-top: 20px;
+}
+
+.google-map-container iframe {
+  border-radius: 10px;
+}
+
+.map-note {
+  margin-top: 15px;
+  font-size: 0.9em;
+  color: var(--light-text-color);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .hero-section {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .hero-image {
+    text-align: center;
+    margin-top: 30px;
+  }
+
+  .hero-content {
+    max-width: 100%;
+  }
+
+  .hero-content h1 {
+    font-size: 2.5em;
+  }
+
+  .hero-content .tagline {
+    font-size: 1.2em;
+  }
+
+  .content-section {
+    padding: 40px 5%;
+  }
+
+  .content-section h2 {
+    font-size: 2em;
+  }
+
+  .featured-products-grid {
+    grid-template-columns: 1fr;
+  }
+}
+.about-content-wrapper {
+  display: flex; 
+  flex-direction: row; 
+  align-items: center; 
+  gap: 50px; 
+  max-width: 1200px; 
+  margin: 0 auto; 
+  text-align: left; 
+}
+
+.about-image {
+  flex: 1; 
+  max-width: 500px; 
+  border-radius: 10px; 
+  overflow: hidden; /* Đảm bảo ảnh bo góc đều */
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1); /* Thêm bóng nhẹ cho ảnh */
+}
+
+.about-image img {
+  width: 100%; /* Đảm bảo ảnh chiếm toàn bộ chiều rộng của container */
+  height: 350px; /* Đặt chiều cao cố định cho ảnh (có thể điều chỉnh) */
+  object-fit: cover; /* Đảm bảo ảnh không bị méo và lấp đầy khung */
+  display: block; /* Loại bỏ khoảng trắng không mong muốn bên dưới ảnh */
+}
+
+.about-text {
+  flex: 1.2; /* Cho phép phần văn bản chiếm nhiều không gian hơn ảnh một chút */
+}
+
+.about-text p {
+  font-size: 1.1em;
+  line-height: 1.6;
+  color: var(--text-color);
+  margin: 0; /* Loại bỏ margin mặc định của thẻ p để kiểm soát layout tốt hơn */
+}
+/* KẾT THÚC CHỈNH SỬA */
+
+/* Responsive cho About Section */
+@media (max-width: 768px) {
+  .about-content-wrapper {
+    flex-direction: column; /* Trên màn hình nhỏ, chuyển sang xếp ảnh và text chồng lên nhau */
+    text-align: center; /* Căn giữa nội dung khi xếp chồng */
+  }
+
+  .about-image {
+    max-width: 100%; /* Ảnh chiếm toàn bộ chiều rộng trên màn hình nhỏ */
+    margin-bottom: 30px; /* Thêm khoảng cách dưới ảnh khi xếp chồng */
+  }
+}
+</style>
