@@ -20,13 +20,22 @@
 
         <div class="form-group">
           <label for="password">Password</label>
-          <input
-            type="password"
-            id="password"
-            v-model="password"
-            required
-            placeholder="Enter your password"
-          />
+          <div class="password-input-wrapper">
+            <input
+              :type="passwordFieldType"
+              id="password"
+              v-model="password"
+              required
+              placeholder="Enter your password"
+            />
+            <button
+              type="button"
+              @click="togglePasswordVisibility"
+              class="toggle-password"
+            >
+              {{ passwordVisible ? "Hide" : "Show" }}
+            </button>
+          </div>
         </div>
 
         <button type="submit" :disabled="isLoading" class="btn-login-submit">
@@ -54,11 +63,21 @@ export default {
       email: "",
       password: "",
       isLoading: false,
+      passwordVisible: false,
       // Đã loại bỏ 'message' và 'messageType' vì SweetAlert2 sẽ xử lý
     };
   },
+  computed: {
+    passwordFieldType() {
+      return this.passwordVisible ? "text" : "password";
+    },
+  },
   methods: {
     ...mapActions("user", ["login"]),
+
+    togglePasswordVisibility() {
+      this.passwordVisible = !this.passwordVisible;
+    },
 
     async submitLogin() {
       this.isLoading = true; // Bắt đầu loading
@@ -149,13 +168,18 @@ export default {
 }
 
 .form-group input[type="email"],
-.form-group input[type="password"] {
+.form-group .password-input-wrapper input {
   width: 100%;
   padding: 12px 15px;
   border: 1px solid var(--border-color);
   border-radius: 8px;
   font-size: 1em;
   transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* Make space for the show/hide button */
+.password-input-wrapper input {
+  padding-right: 70px; /* Thêm khoảng trống để chữ không bị che bởi nút */
 }
 
 .form-group input:focus {
@@ -202,6 +226,25 @@ export default {
 
 .register-link a:hover {
   text-decoration: underline;
+}
+
+/* Styles for the password visibility toggle button */
+.password-input-wrapper {
+  position: relative;
+}
+
+.toggle-password {
+  position: absolute;
+  right: 1px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 10px;
+  color: var(--primary-color);
+  font-weight: 600;
+  font-size: 0.9em;
 }
 
 /* Đã loại bỏ CSS cho .message vì SweetAlert2 sẽ xử lý */

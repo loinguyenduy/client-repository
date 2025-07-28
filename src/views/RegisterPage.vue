@@ -19,12 +19,30 @@
 
         <div class="form-group">
           <label for="password">Password</label>
-          <input type="password" id="password" v-model="password" required placeholder="Enter your password" />
+          <div class="password-input-wrapper">
+            <input :type="passwordFieldType" id="password" v-model="password" required placeholder="Enter your password" />
+            <button
+              type="button"
+              @click="togglePasswordVisibility"
+              class="toggle-password"
+            >
+              {{ passwordVisible ? "Hide" : "Show" }}
+            </button>
+          </div>
         </div>
 
         <div class="form-group">
           <label for="confirmPassword">Confirm Password</label>
-          <input type="password" id="confirmPassword" v-model="confirmPassword" required placeholder="Confirm your password" />
+          <div class="password-input-wrapper">
+            <input :type="confirmPasswordFieldType" id="confirmPassword" v-model="confirmPassword" required placeholder="Confirm your password" />
+            <button
+              type="button"
+              @click="toggleConfirmPasswordVisibility"
+              class="toggle-password"
+            >
+              {{ confirmPasswordVisible ? "Hide" : "Show" }}
+            </button>
+          </div>
         </div>
 
         <!-- Thêm trường Phone Number -->
@@ -67,12 +85,28 @@ export default {
       phoneNumber: '',
       address: '',
       isLoading: false,
+      passwordVisible: false, // for password field
+      confirmPasswordVisible: false, // for confirm password field
       // Đã loại bỏ 'message' và 'messageType' vì SweetAlert2 sẽ xử lý
     };
+  },
+  computed: {
+    passwordFieldType() {
+      return this.passwordVisible ? 'text' : 'password';
+    },
+    confirmPasswordFieldType() {
+      return this.confirmPasswordVisible ? 'text' : 'password';
+    },
   },
   methods: {
     ...mapActions('user', ['register']),
 
+    togglePasswordVisibility() {
+      this.passwordVisible = !this.passwordVisible;
+    },
+    toggleConfirmPasswordVisibility() {
+      this.confirmPasswordVisible = !this.confirmPasswordVisible;
+    },
     async submitRegister() {
       this.isLoading = true; // Bắt đầu loading
 
@@ -168,7 +202,7 @@ export default {
 
 .form-group input[type="text"],
 .form-group input[type="email"],
-.form-group input[type="password"],
+.form-group .password-input-wrapper input,
 .form-group input[type="tel"] { /* <-- Thêm type="tel" vào đây */
   width: 100%;
   padding: 12px 15px;
@@ -176,6 +210,10 @@ export default {
   border-radius: 8px;
   font-size: 1em;
   transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.password-input-wrapper input {
+  padding-right: 70px; /* Thêm khoảng trống để chữ không bị che bởi nút */
 }
 
 .form-group input:focus {
@@ -222,6 +260,25 @@ export default {
 
 .login-link a:hover {
   text-decoration: underline;
+}
+
+/* Styles for the password visibility toggle button */
+.password-input-wrapper {
+  position: relative;
+}
+
+.toggle-password {
+  position: absolute;
+  right: 1px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 10px;
+  color: var(--primary-color);
+  font-weight: 600;
+  font-size: 0.9em;
 }
 
 /* Đã loại bỏ CSS cho .message và .message.error/.success vì SweetAlert2 sẽ xử lý */
