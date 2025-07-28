@@ -63,6 +63,7 @@
 <script>
 import apiClient from '@/helpers/api';
 import { mapGetters } from 'vuex';
+import Swal from 'sweetalert2'; // Import SweetAlert2
 
 export default {
   name: 'AdminCategoryListPage',
@@ -86,8 +87,14 @@ export default {
   async created() {
     // Kiểm tra quyền admin
     if (!this.isAdmin) {
-      alert('You are not authorized to view this page. Admin access required.');
-      this.$router.push('/');
+      Swal.fire({
+        icon: 'error',
+        title: 'Unauthorized Access',
+        text: 'You are not authorized to view this page. Admin access required.',
+        confirmButtonColor: '#A0522D',
+      }).then(() => {
+        this.$router.push('/');
+      });
       return;
     }
     await this.fetchAllCategories();
@@ -101,8 +108,14 @@ export default {
         const response = await apiClient.get('/categories');
         this.categories = response.data;
       } catch (err) {
-        console.error('Error fetching categories:', err);
+        console.error('Error fetching categories:', err); // Giữ console.error cho debug
         this.error = err.response?.data?.message || 'Failed to load categories. Server error.';
+        Swal.fire({
+          icon: 'error',
+          title: 'Error Loading Categories',
+          text: this.error,
+          confirmButtonColor: '#A0522D',
+        });
       } finally {
         this.isLoading = false;
       }
@@ -134,31 +147,62 @@ export default {
       }
 
       try {
-        let response;
         if (this.isEditMode) {
           // Chế độ chỉnh sửa (PUT)
-          response = await apiClient.put(`/categories/${this.editingCategoryId}`, { name: this.newCategoryName });
-          alert('Category updated successfully!');
+          await apiClient.put(`/categories/${this.editingCategoryId}`, { name: this.newCategoryName });
+          Swal.fire({
+            icon: 'success',
+            title: 'Category Updated!',
+            text: 'Category has been updated successfully.',
+            showConfirmButton: false,
+            timer: 1500,
+            timerProgressBar: true,
+            confirmButtonColor: '#A0522D',
+          });
         } else {
           // Chế độ tạo mới (POST)
-          response = await apiClient.post('/categories', { name: this.newCategoryName });
-          alert('Category added successfully!');
+          await apiClient.post('/categories', { name: this.newCategoryName });
+          Swal.fire({
+            icon: 'success',
+            title: 'Category Added!',
+            text: 'New category has been added successfully.',
+            showConfirmButton: false,
+            timer: 1500,
+            timerProgressBar: true,
+            confirmButtonColor: '#A0522D',
+          });
         }
-        console.log('Category saved:', response.data);
         this.newCategoryName = ''; // Xóa tên sau khi thêm/sửa thành công
         this.editingCategoryId = null; // Thoát chế độ chỉnh sửa
         await this.fetchAllCategories(); // Fetch lại danh sách
       } catch (err) {
-        console.error('Error saving category:', err);
+        console.error('Error saving category:', err); // Giữ console.error cho debug
         this.formError = err.response?.data?.message || 'Failed to save category. Server error.';
+        Swal.fire({
+          icon: 'error',
+          title: 'Save Failed',
+          text: this.formError,
+          confirmButtonColor: '#A0522D',
+        });
       } finally {
         this.isSubmitting = false;
       }
     },
 
-    // Xác nhận xóa danh mục
-    confirmDelete(categoryId) {
-      if (confirm('Are you sure you want to delete this category? This action cannot be undone and may affect products linked to it.')) {
+    // Xác nhận xóa danh mục bằng SweetAlert2
+    async confirmDelete(categoryId) {
+      const result = await Swal.fire({
+        title: 'Are you sure?',
+        text: 'You are about to delete this category. This action cannot be undone and may affect products linked to it!',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#dc3545', // Red for delete
+        cancelButtonColor: '#6c757d', // Grey for cancel
+        confirmButtonText: 'Yes, delete it!',
+        cancelButtonText: 'No, cancel!',
+      });
+
+      if (result.isConfirmed) {
         this.deleteCategory(categoryId);
       }
     },
@@ -169,11 +213,25 @@ export default {
       this.error = null;
       try {
         await apiClient.delete(`/categories/${categoryId}`);
-        alert('Category deleted successfully!');
+        Swal.fire({
+          icon: 'success',
+          title: 'Deleted!',
+          text: 'Category has been deleted successfully.',
+          showConfirmButton: false,
+          timer: 1500,
+          timerProgressBar: true,
+          confirmButtonColor: '#A0522D',
+        });
         await this.fetchAllCategories(); // Fetch lại danh sách sau khi xóa
       } catch (err) {
-        console.error(`Error deleting category ${categoryId}:`, err);
+        console.error(`Error deleting category ${categoryId}:`, err); // Giữ console.error cho debug
         this.error = err.response?.data?.message || 'Failed to delete category. Server error.';
+        Swal.fire({
+          icon: 'error',
+          title: 'Deletion Failed',
+          text: this.error,
+          confirmButtonColor: '#A0522D',
+        });
       } finally {
         this.isLoading = false;
       }

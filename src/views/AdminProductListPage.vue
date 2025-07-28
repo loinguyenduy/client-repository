@@ -89,6 +89,7 @@
 <script>
 import apiClient from '@/helpers/api';
 import { mapGetters } from 'vuex';
+import Swal from 'sweetalert2'; // Import SweetAlert2
 
 export default {
   name: 'AdminProductListPage',
@@ -109,8 +110,14 @@ export default {
   async created() {
     // Check admin rights before fetching products
     if (!this.isAdmin) {
-      alert('You are not authorized to view this page. Admin access required.');
-      this.$router.push('/'); // Redirect to home page if not admin
+      Swal.fire({
+        icon: 'error',
+        title: 'Unauthorized Access',
+        text: 'You are not authorized to view this page. Admin access required.',
+        confirmButtonColor: '#A0522D',
+      }).then(() => {
+        this.$router.push('/'); // Redirect to home page if not admin
+      });
       return;
     }
     await this.fetchAllProducts();
@@ -137,17 +144,22 @@ export default {
         const response = await apiClient.get(`/products?page=${this.currentPage}&limit=${this.limit}`); 
         
         this.products = response.data.products; 
-        this.currentPage = response.data.page;      
-        this.totalPages = response.data.pages;      
+        this.currentPage = response.data.page;     
+        this.totalPages = response.data.pages;     
         this.totalProducts = response.data.totalProducts; 
         
       } catch (err) {
-        console.error('AdminProductListPage: Error fetching all products (admin):', err);
         this.error = err.response?.data?.message || 'Failed to load products. Server error.';
         this.products = [];
         this.currentPage = 1;
         this.totalPages = 1;
         this.totalProducts = 0;
+        Swal.fire({
+          icon: 'error',
+          title: 'Error Loading Products',
+          text: this.error,
+          confirmButtonColor: '#A0522D',
+        });
       } finally {
         this.isLoading = false;
       }
@@ -161,9 +173,20 @@ export default {
       }
     },
 
-    // Confirm product deletion
-    confirmDelete(productId) {
-      if (confirm('Are you sure you want to delete this product? This action cannot be undone.')) {
+    // Confirm product deletion using SweetAlert2
+    async confirmDelete(productId) {
+      const result = await Swal.fire({
+        title: 'Are you sure?',
+        text: 'You are about to delete this product. This action cannot be undone!',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#dc3545', // Red color for delete
+        cancelButtonColor: '#6c757d', // Grey color for cancel
+        confirmButtonText: 'Yes, delete it!',
+        cancelButtonText: 'No, cancel!',
+      });
+
+      if (result.isConfirmed) {
         this.deleteProduct(productId);
       }
     },
@@ -174,7 +197,17 @@ export default {
       this.error = null;
       try {
         await apiClient.delete(`/products/${productId}`); 
-        alert('Product deleted successfully!');
+        
+        Swal.fire({
+          icon: 'success',
+          title: 'Deleted!',
+          text: 'Product has been deleted successfully.',
+          showConfirmButton: false,
+          timer: 1500,
+          timerProgressBar: true,
+          confirmButtonColor: '#A0522D',
+        });
+
         // After deletion, go back to the previous page if the current page becomes empty
         // or re-fetch the current page if there are still products
         if (this.products.length === 1 && this.currentPage > 1) {
@@ -182,8 +215,13 @@ export default {
         }
         await this.fetchAllProducts(); 
       } catch (err) {
-        console.error(`AdminProductListPage: Error deleting product ${productId}:`, err);
         this.error = err.response?.data?.message || 'Failed to delete product. Server error.';
+        Swal.fire({
+          icon: 'error',
+          title: 'Deletion Failed',
+          text: this.error,
+          confirmButtonColor: '#A0522D',
+        });
       } finally {
         this.isLoading = false;
       }

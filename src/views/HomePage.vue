@@ -83,17 +83,45 @@
       </div>
     </section>
 
-    <!-- Phần Giờ mở cửa (Đã thay thế Contact Info) -->
-    <section class="opening-hours-section content-section">
-      <h2>Opening Hours</h2>
-      <div class="hours-details">
-        <p><strong>Monday - Friday:</strong> 11:00 AM - 10:00 PM</p>
-        <p><strong>Saturday - Sunday:</strong> 12:00 PM - 11:00 PM</p>
+    <!-- NEW: Why Choose Section -->
+    <section class="why-choose-section content-section">
+      <h2>Why Choose Viet Flavor?</h2>
+      <div class="why-choose-grid">
+        <div class="why-choose-item">
+          <i class="fas fa-star"></i>
+          <h3>5-Star Quality</h3>
+          <p>We use only the freshest, high-quality ingredients to ensure every dish is a masterpiece.</p>
+        </div>
+        <div class="why-choose-item">
+          <i class="fas fa-truck"></i>
+          <h3>Fast Delivery</h3>
+          <p>Enjoy your favorite Vietnamese dishes delivered hot and fresh right to your doorstep.</p>
+        </div>
+        <div class="why-choose-item">
+          <i class="fas fa-headset"></i>
+          <h3>24/7 Service</h3>
+          <p>Our team is always ready to serve you, ensuring a seamless dining experience.</p>
+        </div>
+        <div class="why-choose-item">
+          <i class="fas fa-shield-alt"></i>
+          <h3>Food Safety</h3>
+          <p>We adhere to the strictest hygiene standards to guarantee safe and healthy meals.</p>
+        </div>
+        <div class="why-choose-item">
+          <i class="fas fa-smile"></i>
+          <h3>Customer Satisfaction</h3>
+          <p>Your happiness is our priority. We strive to exceed your expectations with every order.</p>
+        </div>
+        <div class="why-choose-item">
+          <i class="fas fa-leaf"></i>
+          <h3>Fresh Ingredients</h3>
+          <p>Sourced daily from local farms, our ingredients guarantee authentic and vibrant flavors.</p>
+        </div>
       </div>
     </section>
 
     <!-- Google Map Section -->
-    <section class="map-section content-section">
+    <!-- <section class="map-section content-section">
       <h2>Find Us Here</h2>
       <div class="google-map-container">
         <iframe
@@ -108,8 +136,8 @@
         ></iframe>
       </div>
       <p class="map-note">Click on the map for directions.</p>
-    </section>
-  </div>
+    </section> -->
+  </div> 
 </template>
 
 <script>
@@ -315,34 +343,74 @@ export default {
   margin-top: 20px;
 }
 
-/* Opening Hours Section */
-.opening-hours-section {
+/* NEW: Why Choose Section CSS */
+.why-choose-section {
   padding: 60px 5%;
   text-align: center;
+  background-color: #f8f8f8; /* Nền nhẹ để nổi bật */
 }
 
-.opening-hours-section h2 {
+.why-choose-section h2 {
   font-size: 2.5em;
   color: var(--primary-color);
   margin-bottom: 40px;
   font-family: var(--font-family-heading);
 }
 
-.hours-details {
-  max-width: 600px;
+.why-choose-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 30px;
+  max-width: 1200px;
   margin: 0 auto;
-  text-align: center; /* Căn giữa nội dung giờ mở cửa */
-  font-size: 1.1em;
-  line-height: 1.8;
-  color: var(--text-color);
 }
 
-.hours-details strong {
-  color: var(--primary-color);
+.why-choose-item {
+  background-color: #fff;
+  padding: 30px;
+  border-radius: 10px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.why-choose-item:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+}
+
+.why-choose-item i {
+  font-size: 3em;
+  color: var(--accent-color);
+  margin-bottom: 20px;
+}
+
+.why-choose-item h3 {
+  font-size: 1.5em;
+  color: var(--text-color);
+  margin-bottom: 10px;
+  font-family: var(--font-family-heading);
+}
+
+.why-choose-item p {
+  font-size: 1em;
+  color: var(--light-text-color);
+  line-height: 1.6;
+  margin-bottom: 0; /* Remove default paragraph margin */
+}
+
+/* Responsive adjustments for Why Choose Section */
+@media (max-width: 768px) {
+  .why-choose-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* Map Section */
-.google-map-container {
+/* .google-map-container {
   width: 100%;
   max-width: 1000px;
   margin: 0 auto;
@@ -360,7 +428,7 @@ export default {
   margin-top: 15px;
   font-size: 0.9em;
   color: var(--light-text-color);
-}
+} */
 
 /* Responsive adjustments */
 @media (max-width: 768px) {

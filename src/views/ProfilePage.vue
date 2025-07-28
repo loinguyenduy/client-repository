@@ -4,10 +4,8 @@
     <div class="profile-container">
       <h2>User Profile</h2>
       
-      <!-- Hiển thị thông báo lỗi hoặc thành công -->
-      <div v-if="message" :class="['message', messageType]">
-        {{ message }}
-      </div>
+      <!-- Đã loại bỏ phần hiển thị thông báo lỗi hoặc thành công thông thường, 
+           vì SweetAlert2 sẽ xử lý điều này -->
 
       <!-- Phần hiển thị thông tin hồ sơ -->
       <div v-if="!isEditingProfile" class="profile-display">
@@ -72,6 +70,7 @@
 
 <script>
 import { mapGetters, mapActions } from 'vuex';
+import Swal from 'sweetalert2'; // Import SweetAlert2
 
 export default {
   name: 'ProfilePage',
@@ -89,8 +88,8 @@ export default {
 
       isLoadingProfileUpdate: false, // Trạng thái loading khi cập nhật profile
       isLoadingPasswordChange: false, // Trạng thái loading khi đổi mật khẩu
-      message: '',                   // Thông báo lỗi/thành công
-      messageType: ''                // Loại thông báo: 'success' hoặc 'error'
+      // Đã xóa: message: '',
+      // Đã xóa: messageType: ''
     };
   },
   computed: {
@@ -123,15 +122,19 @@ export default {
     try {
       await this.fetchUserProfile();
     } catch (err) {
-      this.message = err.message || 'Failed to load profile data.';
-      this.messageType = 'error';
+      Swal.fire({
+        icon: 'error',
+        title: 'Error Loading Profile',
+        text: err.message || 'Failed to load profile data. Please try again.',
+        confirmButtonColor: '#A0522D',
+      });
     } finally {
       this.isLoadingProfileUpdate = false;
     }
   },
   methods: {
     // Ánh xạ các actions từ module 'user' của Vuex store
-    ...mapActions('user', ['fetchUserProfile', 'updateProfile']),
+    ...mapActions('user', ['fetchUserProfile', 'updateProfile']), // Giả định updateProfile có thể xử lý cả thông tin và mật khẩu
 
     // Bắt đầu chỉnh sửa hồ sơ: sao chép thông tin hiện tại vào form
     startEditingProfile() {
@@ -140,20 +143,23 @@ export default {
       this.editEmail = this.userInfo.email;
       this.editPhoneNumber = this.userInfo.phoneNumber;
       this.editAddress = this.userInfo.address;
-      this.message = ''; // Xóa thông báo cũ
     },
 
     // Hủy chỉnh sửa hồ sơ
     cancelEditingProfile() {
       this.isEditingProfile = false;
-      this.message = ''; // Xóa thông báo cũ
+      // Reset form chỉnh sửa về trạng thái ban đầu của userInfo
+      if (this.userInfo) {
+        this.editFullName = this.userInfo.fullName || '';
+        this.editEmail = this.userInfo.email || '';
+        this.editPhoneNumber = this.userInfo.phoneNumber || '';
+        this.editAddress = this.userInfo.address || '';
+      }
     },
 
     // Gửi yêu cầu cập nhật thông tin hồ sơ
     async updateUserProfile() {
       this.isLoadingProfileUpdate = true;
-      this.message = '';
-      this.messageType = '';
 
       try {
         const updatedData = {
@@ -163,12 +169,27 @@ export default {
           address: this.editAddress,
         };
         await this.updateProfile(updatedData); // Gọi action cập nhật profile
-        this.message = 'Profile updated successfully!';
-        this.messageType = 'success';
-        this.isEditingProfile = false; // Tắt chế độ chỉnh sửa sau khi cập nhật
+        
+        Swal.fire({
+          icon: 'success',
+          title: 'Profile Updated!',
+          text: 'Your profile has been updated successfully.',
+          showConfirmButton: false,
+          timer: 1500,
+          timerProgressBar: true,
+          confirmButtonColor: '#A0522D',
+        }).then(() => {
+          this.isEditingProfile = false; // Tắt chế độ chỉnh sửa sau khi cập nhật
+        });
+
       } catch (err) {
-        this.message = err.message || 'Failed to update profile. Please try again.';
-        this.messageType = 'error';
+        console.error('Error updating profile:', err);
+        Swal.fire({
+          icon: 'error',
+          title: 'Update Failed',
+          text: err.message || 'Failed to update profile. Please try again.',
+          confirmButtonColor: '#A0522D',
+        });
       } finally {
         this.isLoadingProfileUpdate = false;
       }
@@ -177,62 +198,54 @@ export default {
     // Gửi yêu cầu đổi mật khẩu
     async changePassword() {
       this.isLoadingPasswordChange = true;
-      this.message = '';
-      this.messageType = '';
 
       if (this.newPassword !== this.confirmNewPassword) {
-        this.message = 'New passwords do not match.';
-        this.messageType = 'error';
+        Swal.fire({
+          icon: 'error',
+          title: 'Password Mismatch',
+          text: 'New passwords do not match.',
+          confirmButtonColor: '#A0522D',
+        });
         this.isLoadingPasswordChange = false;
         return;
       }
 
-      // Lưu ý: Backend của bạn cần có một API riêng để đổi mật khẩu,
-      // thường là PUT /api/users/change-password hoặc tương tự.
-      // API updateProfile hiện tại của bạn chỉ cập nhật thông tin khác, không phải mật khẩu.
-      // Nếu API updateProfile của bạn hỗ trợ đổi mật khẩu, hãy truyền currentPassword và newPassword vào đó.
-      // Nếu không, bạn cần tạo một action Vuex và API backend mới cho việc đổi mật khẩu.
       try {
         // Giả định backend có API để đổi mật khẩu và action Vuex tương ứng
-        // await this.changeUserPassword({
-        //   currentPassword: this.currentPassword,
-        //   newPassword: this.newPassword,
-        // });
-        // Vì hiện tại chúng ta chưa có API/action đổi mật khẩu riêng, 
-        // tôi sẽ chỉ mô phỏng thành công hoặc báo lỗi nếu không có API.
-        
-        // --- BẮT ĐẦU MÔ PHỎNG HOẶC GỌI API THỰC TẾ ---
-        // Nếu backend của bạn có API đổi mật khẩu riêng, bạn sẽ gọi nó ở đây:
-        // await apiClient.put('/users/change-password', {
-        //   currentPassword: this.currentPassword,
-        //   newPassword: this.newPassword,
-        // });
-        // Và bạn sẽ cần một action mới trong store.js (ví dụ: changeUserPassword)
-        // để gọi API này.
-
-        // Hiện tại, chúng ta sẽ giả định thành công hoặc báo lỗi nếu không có API
-        // Nếu bạn đã có API đổi mật khẩu trong updateProfile, hãy dùng nó.
-        // Nếu không, bạn cần thêm API và action riêng.
+        // Nếu API `updateProfile` của bạn có thể xử lý đổi mật khẩu, hãy truyền dữ liệu vào đó.
+        // Nếu không, bạn cần một action Vuex và API backend riêng cho việc đổi mật khẩu.
         // Ví dụ:
         const passwordUpdateData = {
             currentPassword: this.currentPassword,
             newPassword: this.newPassword,
         };
-        // Giả sử API updateProfile của bạn có thể xử lý đổi mật khẩu
-        // Nếu không, bạn cần một API riêng cho đổi mật khẩu ở backend
-        await this.updateProfile(passwordUpdateData); // <-- Cần đảm bảo backend xử lý được
-        // --- KẾT THÚC MÔ PHỎNG HOẶC GỌI API THỰC TẾ ---
+        // Gọi action Vuex để đổi mật khẩu.
+        // Đây là một giả định, bạn cần đảm bảo action 'updateProfile' hoặc một action khác
+        // trong Vuex store của bạn có thể xử lý việc đổi mật khẩu.
+        await this.updateProfile(passwordUpdateData); 
 
+        Swal.fire({
+          icon: 'success',
+          title: 'Password Changed!',
+          text: 'Your password has been changed successfully.',
+          showConfirmButton: false,
+          timer: 1500,
+          timerProgressBar: true,
+          confirmButtonColor: '#A0522D',
+        });
 
-        this.message = 'Password changed successfully!';
-        this.messageType = 'success';
         // Xóa các trường mật khẩu sau khi đổi thành công
         this.currentPassword = '';
         this.newPassword = '';
         this.confirmNewPassword = '';
       } catch (err) {
-        this.message = err.message || 'Failed to change password. Please try again.';
-        this.messageType = 'error';
+        console.error('Error changing password:', err);
+        Swal.fire({
+          icon: 'error',
+          title: 'Change Failed',
+          text: err.message || 'Failed to change password. Please try again.',
+          confirmButtonColor: '#A0522D',
+        });
       } finally {
         this.isLoadingPasswordChange = false;
       }
@@ -277,26 +290,7 @@ export default {
   font-family: var(--font-family-heading);
 }
 
-/* Thông báo lỗi/thành công */
-.message {
-  padding: 12px;
-  margin-bottom: 20px;
-  border-radius: 8px;
-  font-weight: 500;
-  text-align: left;
-}
-
-.message.error {
-  background-color: #ffe6e6;
-  color: #cc0000;
-  border: 1px solid #cc0000;
-}
-
-.message.success {
-  background-color: #e6ffe6;
-  color: #008000;
-  border: 1px solid #008000;
-}
+/* Đã xóa CSS cho .message */
 
 /* Phần hiển thị thông tin */
 .profile-display {

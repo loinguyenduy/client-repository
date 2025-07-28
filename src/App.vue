@@ -1,14 +1,13 @@
 <template>
   <div id="app">
-    <header class="app-header">
+    <header class="web-header">
       <nav class="container">
         <router-link to="/" class="brand-logo">
           <img src="@/assets/logo.png" alt="Restaurant Logo" class="logo-img" />
-          <span class="brand-name">Viet Flavor
-</span>
+          <span class="brand-name">Viet Flavor</span>
         </router-link>
 
-        <div class="nav-links">
+        <div class="nav-bar">
           <template v-if="!isAdmin">
             <router-link to="/" class="nav-item">Home</router-link>
             <router-link to="/menu" class="nav-item">Menu</router-link>
@@ -18,8 +17,8 @@
           </template>
 
           <template v-if="!isLoggedIn">
-            <router-link to="/login" class="nav-item btn-login">Login</router-link>
-            <router-link to="/register" class="nav-item btn-register">Register</router-link>
+            <router-link to="/login" class="btn-login">Login</router-link>
+            <router-link to="/register" class="btn-register">Register</router-link>
           </template>
           <!-- Liên kết hiển thị khi người dùng ĐÃ đăng nhập -->
           <template v-else>
@@ -28,53 +27,67 @@
               {{ userInfo?.fullName || 'Profile' }} <!-- Hiển thị tên đầy đủ hoặc 'Profile' -->
             </router-link>
             <!-- Liên kết Admin chỉ hiển thị nếu người dùng là Admin -->
-            <router-link v-if="isAdmin" to="/admin/products" class="nav-item btn-admin">Admin Management</router-link>
-            <button @click="handleLogout" class="nav-item btn-logout">Logout</button>
+            <router-link v-if="isAdmin" to="/admin/dashboard" class="nav-item btn-admin">Admin Management</router-link>
+            <button @click="confirmLogout" class="nav-item btn-logout">Logout</button>
           </template>
         </div>
       </nav>
     </header>
 
-    <main class="app-main">
-      <router-view /> <!-- Nơi nội dung của các trang con sẽ được hiển thị -->
+    <main class="web-main">
+      <router-view /> 
     </main>
 
-    <footer class="app-footer">
+    <footer class="web-footer">
       <div class="container footer-content">
-        <div class="footer-section brand-info">
+        <div class="brand-info">
           <router-link to="/" class="brand-logo footer-logo">
             <img src="@/assets/logo.png" alt="Restaurant Logo" class="logo-img" />
             <span class="brand-name">Viet Flavor</span>
           </router-link>
-          <p class="slogan">Where flavor meets art.</p>
+          <p class="slogan">The essence of Vietnamese dishes, complete with love.</p>
           <p class="copyright">&copy; {{ currentYear }} Viet Flavor. All rights reserved.</p>
         </div>
-
-        <!-- <div class="footer-section quick-links">
-          <h3>Quick Links</h3>
-          <ul>
-            <li><router-link to="/about" class="footer-link">About Us</router-link></li>
-            <li><router-link to="/contact" class="footer-link">Contact Us</router-link></li>
-            <li><router-link to="/privacy" class="footer-link">Privacy Policy</router-link></li>
-            <li><router-link to="/terms" class="footer-link">Terms of Service</router-link></li>
-          </ul>
-        </div> -->
-
-        <div class="footer-section contact-info">
+        <div class="contact-info">
           <h3>Contact Us</h3>
-          <p><i class="fas fa-map-marker-alt"></i> 123 ABC Street, XYZ District, HCMC</p>
-          <p><i class="fas fa-phone"></i> +84 123 456 789</p>
-          <p><i class="fas fa-envelope"></i> vietflavor@gmail.com</p>
-          <p><i class="fas fa-clock"></i> Opening Hours: Mon-Fri: 9:00-22:00, Weekends: 10:00-23:00</p>
+          <p><i class="address-map"></i> 2 Pham Van Bach Street, Cau Giay District, Hanoi City</p>
+          <p><i class="infor-phone"></i> +84 619 998 570</p>
+          <p><i class="infor-email"></i> vietflavor@gmail.com</p>
+        </div>
+
+        <div class="opening-hours">
+          <h3>Opening Hours</h3>
+          <div class="hours-details">
+            <p><strong>Monday - Friday:</strong> 11:00 AM - 10:00 PM</p>
+            <p><strong>Saturday - Sunday:</strong> 12:00 PM - 11:00 PM</p>
+            <p><i>Special Holiday Hours May Apply - Please Call Ahead </i></p>
+          </div>
         </div>
 
         <div class="footer-section social-media">
           <h3>Follow Us</h3>
           <div class="social-icons">
-            <a href="https://www.facebook.com/nguyen.duy.loi.206498" class="social-icon"><i class="fab fa-facebook-f"></i></a>
-            <a href="https://www.instagram.com/nduyl_25/" class="social-icon"><i class="fab fa-instagram"></i></a>
-            <a href="#" class="social-icon"><i class="fab fa-twitter"></i></a>
+            <a href="https://www.facebook.com/nguyen.duy.loi.206498" class="social-icon" target="_blank"><i class="fab fa-facebook-f"></i></a>
+            <a href="https://www.instagram.com/nduyl_25/" class="social-icon" target="_blank"><i class="fab fa-instagram"></i></a>
+            <a href="#" class="social-icon" target="_blank"><i class="fab fa-twitter"></i></a>
           </div>
+        </div>
+
+        <div class="footer-section footer-map">
+          <h3>Find Us</h3>
+          <div class="google-map-container-footer">
+            <iframe
+              width="100%"
+              height="200"
+              frameborder="0"
+              style="border:0"
+              allowfullscreen=""
+              loading="lazy"
+              referrerpolicy="no-referrer-when-downgrade"
+              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3724.2134973252655!2d105.78781021191256!3d21.024141787854322!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3135ab9f983e67af%3A0x41721163aff0f497!2sChung%20c%C6%B0%20Golden%20Park!5e0!3m2!1svi!2s!4v1752768721711!5m2!1svi!2s" 
+            ></iframe>
+          </div>
+          <p class="map-note-footer">Click on the map for directions.</p>
         </div>
       </div>
     </footer>
@@ -83,6 +96,7 @@
 
 <script>
 import { mapGetters, mapActions } from 'vuex';
+import Swal from 'sweetalert2'; // Import SweetAlert2
 
 export default {
   name: 'App',
@@ -103,13 +117,43 @@ export default {
     // Ánh xạ action 'logout' từ module 'user' của Vuex store
     ...mapActions('user', ['logout']),
     
-    // Xử lý sự kiện click cho nút Đăng xuất
-    async handleLogout() {
-      try {
-        await this.logout(); // Gọi action logout từ Vuex
-      } catch (error) {
-        console.error("Logout failed:", error);
-        alert("An error occurred during logout. Please try again."); // Thông báo lỗi bằng tiếng Anh
+    // Phương thức mới để xác nhận và xử lý đăng xuất
+    async confirmLogout() {
+      const result = await Swal.fire({
+        title: 'Are you sure you want to log out?',
+        text: 'You will be logged out of your account.',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#A0522D', // Màu sắc nút xác nhận
+        cancelButtonColor: '#6c757d', // Màu sắc nút hủy
+        confirmButtonText: 'Yes, log me out!',
+        cancelButtonText: 'Cancel',
+      });
+
+      if (result.isConfirmed) {
+        try {
+          await this.logout(); // Gọi action logout từ Vuex
+          Swal.fire({
+            icon: 'success',
+            title: 'Logged Out!',
+            text: 'You have been successfully logged out.',
+            showConfirmButton: false,
+            timer: 1500,
+            timerProgressBar: true,
+            confirmButtonColor: '#A0522D',
+          });
+          this.$router.push('/'); // Chuyển hướng về trang chủ
+        } catch (error) {
+          console.error("Logout failed:", error);
+          Swal.fire({
+            icon: 'error',
+            title: 'Logout Failed',
+            text: error.message || 'There was an error logging you out. Please try again.',
+            confirmButtonColor: '#A0522D',
+          });
+        }
+      } else {
+        console.log('Logout cancelled.');
       }
     }
   },
@@ -165,7 +209,7 @@ body {
 }
 
 /* --- Header Styling --- */
-.app-header {
+.web-header {
   background-color: #fff;
   padding: 15px 0;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
@@ -174,7 +218,7 @@ body {
   z-index: 1000; /* Đảm bảo header nằm trên các nội dung khác */
 }
 
-.app-header .container {
+.web-header .container {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -196,7 +240,7 @@ body {
   border-radius: 50%; /* Bo tròn logo nếu là hình ảnh */
 }
 
-.nav-links {
+.nav-bar {
   display: flex;
   align-items: center;
   gap: 25px; /* Khoảng cách giữa các liên kết */
@@ -224,18 +268,18 @@ body {
 
 /* Nút Đăng nhập/Đăng ký */
 .btn-login, .btn-register {
-  background-color: var(--primary-color);
-  color: #fff;
-  border: 1px solid var(--primary-color);
-  padding: 8px 15px;
+  /* background-color: var(--primary-color); */
+  color: var(--text-color); /* Đảm bảo màu chữ ban đầu là màu tối */
+  padding: 8px 15px; /* Giữ padding để chúng trông như nút */
   border-radius: 5px;
   text-decoration: none;
-  transition: background-color 0.3s ease, color 0.3s ease;
+  transition: all 0.3s ease; /* Sử dụng transition chung để chuyển đổi mượt mà */
+  white-space: nowrap;
+  border: 1px solid transparent; /* Border trong suốt ban đầu */
 }
 
 .btn-login:hover, .btn-register:hover {
-  background-color: darken(var(--primary-color), 10%); /* Làm tối màu khi hover */
-  color: #fff;
+  border: 1px solid var(--primary-color);
 }
 
 /* Link Hồ sơ người dùng */
@@ -279,14 +323,14 @@ body {
 }
 
 /* --- Main Content Styling --- */
-.app-main {
+.web-main {
   flex-grow: 1;
   padding: 40px 0; /* Khoảng cách trên dưới cho nội dung chính */
   background-color: var(--bg-light);
 }
 
 /* --- Footer Styling --- */
-.app-footer {
+.web-footer {
   background-color: var(--bg-dark);
   color: #fff;
   padding: 40px 0;
@@ -295,7 +339,7 @@ body {
 
 .footer-content {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); /* Chia cột responsive */
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); /* Chia cột responsive */
   gap: 30px;
   text-align: left;
 }
@@ -336,6 +380,7 @@ body {
 }
 
 .footer-logo .brand-name {
+  font-size: 24px;
   color: #fff;
 }
 
@@ -378,14 +423,38 @@ body {
   color: var(--accent-color);
 }
 
+.footer-map {
+  /* Đảm bảo nó chiếm không gian hợp lý trong grid */
+  /* Có thể điều chỉnh flex-basis hoặc max-width nếu cần */
+}
+
+.google-map-container-footer {
+  width: 100%;
+  border-radius: 8px; /* Bo tròn góc cho container map */
+  overflow: hidden; /* Đảm bảo iframe không tràn ra ngoài */
+  box-shadow: 0 2px 10px rgba(0,0,0,0.2); /* Bóng cho map */
+  margin-top: 10px; /* Khoảng cách với tiêu đề "Find Us" */
+}
+
+.google-map-container-footer iframe {
+  border-radius: 8px; /* Áp dụng border-radius cho iframe */
+  display: block; /* Loại bỏ khoảng trắng dưới iframe */
+}
+
+.map-note-footer {
+  font-size: 0.8em;
+  color: rgba(255, 255, 255, 0.6);
+  margin-top: 10px;
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
-  .app-header .container {
+  .web-header .container {
     flex-direction: column;
     gap: 15px;
   }
 
-  .nav-links {
+  .nav-bar {
     flex-wrap: wrap;
     justify-content: center;
     gap: 10px;

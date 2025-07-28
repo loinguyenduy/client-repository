@@ -3,10 +3,8 @@
   <div class="login-page">
     <div class="login-container">
       <h2>Login to Your Account</h2>
-      <!-- Hiển thị thông báo lỗi -->
-      <div v-if="message" :class="['message', messageType]">
-        {{ message }}
-      </div>
+      <!-- Đã loại bỏ phần hiển thị thông báo lỗi thông thường, 
+           vì SweetAlert2 sẽ xử lý điều này -->
 
       <form @submit.prevent="submitLogin" class="login-form">
         <div class="form-group">
@@ -46,7 +44,8 @@
 </template>
 
 <script>
-import { mapActions } from "vuex"; // Import mapActions để gọi Vuex actions
+import { mapActions } from "vuex";
+import Swal from 'sweetalert2'; // Import SweetAlert2
 
 export default {
   name: "LoginPage",
@@ -54,19 +53,15 @@ export default {
     return {
       email: "",
       password: "",
-      isLoading: false, // Trạng thái loading cho nút submit
-      message: "", // Thông báo lỗi
-      messageType: "", // Loại thông báo: 'error'
+      isLoading: false,
+      // Đã loại bỏ 'message' và 'messageType' vì SweetAlert2 sẽ xử lý
     };
   },
   methods: {
-    // Ánh xạ action 'login' từ module 'user' của Vuex store
     ...mapActions("user", ["login"]),
 
     async submitLogin() {
       this.isLoading = true; // Bắt đầu loading
-      this.message = ""; // Xóa thông báo cũ
-      this.messageType = "";
 
       try {
         // Gọi action 'login' từ Vuex store, truyền email và password
@@ -75,13 +70,34 @@ export default {
           password: this.password,
         });
 
-        // Nếu login thành công, Vuex action 'login' đã tự động chuyển hướng
-        // về trang chủ hoặc trang mà người dùng muốn truy cập trước đó.
-        // Không cần router.push ở đây.
+        // Hiển thị thông báo thành công bằng SweetAlert2
+        Swal.fire({
+          icon: 'success',
+          title: 'Login Successful!',
+          text: 'Welcome back! Redirecting to home page...',
+          showConfirmButton: false, // Không hiển thị nút OK ngay lập tức
+          timer: 2000, // Tự động đóng sau 2 giây
+          timerProgressBar: true,
+        }).then(() => {
+          // Vuex action 'login' đã tự động chuyển hướng về trang chủ
+          // hoặc trang mà người dùng muốn truy cập trước đó.
+          // Tuy nhiên, để đảm bảo chuyển hướng sau khi SweetAlert đóng,
+          // chúng ta có thể gọi router.push() ở đây.
+          // Nếu bạn đã có logic redirect trong Vuex action, hãy cân nhắc
+          // xem có cần dòng này không để tránh redirect kép.
+          // Ví dụ: this.$router.push('/');
+          // Để an toàn, chúng ta sẽ để Vuex xử lý redirect chính,
+          // còn SweetAlert chỉ là thông báo.
+        });
+
       } catch (err) {
-        // Bắt lỗi được ném từ Vuex action và hiển thị cho người dùng
-        this.message = err.message || "Login failed. Please try again.";
-        this.messageType = "error";
+        // Bắt lỗi được ném từ Vuex action và hiển thị cho người dùng bằng SweetAlert2
+        Swal.fire({
+          icon: 'error',
+          title: 'Login Failed',
+          text: err.message || 'An unexpected error occurred. Please try again.',
+          confirmButtonColor: '#A0522D',
+        });
       } finally {
         this.isLoading = false; // Kết thúc loading
       }
@@ -188,18 +204,5 @@ export default {
   text-decoration: underline;
 }
 
-/* Thông báo lỗi */
-.message {
-  padding: 12px;
-  margin-bottom: 20px;
-  border-radius: 8px;
-  font-weight: 500;
-  text-align: left;
-}
-
-.message.error {
-  background-color: #ffe6e6; /* Màu nền đỏ nhạt */
-  color: #cc0000; /* Màu chữ đỏ đậm */
-  border: 1px solid #cc0000;
-}
+/* Đã loại bỏ CSS cho .message vì SweetAlert2 sẽ xử lý */
 </style>

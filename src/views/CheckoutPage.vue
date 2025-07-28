@@ -7,13 +7,13 @@
       <!-- Hiển thị Loading Spinner -->
       <div v-if="isCartLoading" class="loading-spinner">Loading cart for checkout...</div>
 
-      <!-- Hiển thị thông báo lỗi nếu có -->
-      <div v-else-if="getCartError" class="error-message">
+      <!-- Hiển thị thông báo lỗi nếu có (từ fetchCart ban đầu) -->
+      <div v-else-if="getCartError && validCartItems.length === 0" class="error-message">
         {{ getCartError }}
         <router-link to="/menu" class="btn-back-to-menu">Back to Menu</router-link>
       </div>
 
-      <!-- Hiển thị khi giỏ hàng rỗng -->
+      <!-- Hiển thị khi giỏ hàng rỗng (hoặc chứa toàn bộ sản phẩm không hợp lệ) -->
       <div v-else-if="validCartItems.length === 0" class="empty-cart-message">
         <p>Your cart is empty or contains no valid items. Please add items before proceeding to checkout.</p>
         <router-link to="/menu" class="btn-primary">Explore Menu</router-link>
@@ -68,12 +68,7 @@
               </div> -->
             </div>
 
-            <div v-if="orderErrorMessage" class="order-message error">
-              {{ orderErrorMessage }}
-            </div>
-            <div v-if="orderSuccessMessage" class="order-message success">
-              {{ orderSuccessMessage }}
-            </div>
+            <!-- Đã xóa các div order-message cũ -->
 
             <button type="submit" :disabled="isPlacingOrder" class="btn-place-order">
               <span v-if="isPlacingOrder">Placing Order...</span>
@@ -85,7 +80,6 @@
         <div class="order-summary-section">
           <h2>Your Order</h2>
           <div class="order-items-summary">
-            <!-- ĐÃ SỬA: Sử dụng validCartItems thay vì getCartItems -->
             <div v-for="item in validCartItems" :key="item.product._id" class="summary-item">
               <img :src="getBackendImageUrl(item.image)" :alt="item.name" class="summary-item-image" />
               <div class="summary-item-info">
@@ -111,6 +105,7 @@
 <script>
 import apiClient from '@/helpers/api';
 import { mapGetters, mapActions } from 'vuex';
+import Swal from 'sweetalert2'; // Import SweetAlert2
 
 export default {
   name: 'CheckoutPage',
@@ -125,8 +120,8 @@ export default {
       },
       paymentMethod: 'Cash', // Mặc định là Cash on Delivery
       isPlacingOrder: false,
-      orderSuccessMessage: '',
-      orderErrorMessage: '',
+      // Đã xóa: orderSuccessMessage: '',
+      // Đã xóa: orderErrorMessage: '',
     };
   },
   computed: {
@@ -134,12 +129,12 @@ export default {
     ...mapGetters('user', ['isLoggedIn', 'getUserInfo']),
     ...mapGetters('cart', ['getCartItems', 'isCartLoading', 'getCartError']),
 
-    // NEW: Computed property to filter out invalid cart items
+    // Computed property to filter out invalid cart items
     validCartItems() {
       return this.getCartItems.filter(item => item.product !== null);
     },
 
-    // NEW: Calculate subtotal based on valid items
+    // Calculate subtotal based on valid items
     calculatedSubtotal() {
       return this.validCartItems.reduce((total, item) => total + item.price * item.quantity, 0);
     },
@@ -164,8 +159,14 @@ export default {
   async created() {
     // Kiểm tra đăng nhập
     if (!this.isLoggedIn) {
-      alert('You need to login to proceed to checkout.');
-      this.$router.push('/login');
+      Swal.fire({
+        icon: 'info',
+        title: 'Login Required',
+        text: 'You need to login to proceed to checkout.',
+        confirmButtonColor: '#A0522D',
+      }).then(() => {
+        this.$router.push('/login');
+      });
       return;
     }
 
@@ -174,8 +175,14 @@ export default {
 
     // Kiểm tra giỏ hàng rỗng SAU KHI fetch và lọc
     if (this.validCartItems.length === 0) { 
-      alert('Your cart is empty or contains no valid items. Please add items before proceeding to checkout.');
-      this.$router.push('/menu'); 
+      Swal.fire({
+        icon: 'info',
+        title: 'Cart Empty',
+        text: 'Your cart is empty or contains no valid items. Please add items before proceeding to checkout.',
+        confirmButtonColor: '#A0522D',
+      }).then(() => {
+        this.$router.push('/menu'); 
+      });
       return;
     }
 
@@ -205,19 +212,29 @@ export default {
     // Xử lý đặt hàng
     async handlePlaceOrder() {
       this.isPlacingOrder = true;
-      this.orderSuccessMessage = '';
-      this.orderErrorMessage = '';
 
       // Thêm kiểm tra validation cho địa chỉ nếu deliveryType là 'shipping'
       if (this.shippingInfo.deliveryType === 'shipping' && !this.shippingInfo.address) {
-        this.orderErrorMessage = 'Shipping address is required for delivery!';
+        Swal.fire({
+          icon: 'error',
+          title: 'Missing Information',
+          text: 'Shipping address is required for delivery!',
+          confirmButtonColor: '#A0522D',
+        });
         this.isPlacingOrder = false;
         return;
       }
 
       // Đảm bảo có ít nhất một sản phẩm hợp lệ trong giỏ hàng để đặt
       if (this.validCartItems.length === 0) {
-        this.orderErrorMessage = 'Your cart contains no valid items to order. Please add valid items.';
+        Swal.fire({
+          icon: 'warning',
+          title: 'Cart Empty',
+          text: 'Your cart contains no valid items to order. Please add valid items.',
+          confirmButtonColor: '#A0522D',
+        }).then(() => {
+          this.$router.push('/menu'); 
+        });
         this.isPlacingOrder = false;
         return;
       }
@@ -244,19 +261,45 @@ export default {
 
         const response = await apiClient.post('/orders', orderData);
         
-        this.orderSuccessMessage = `Order placed successfully! Order ID: ${response.data._id}`;
-        this.orderErrorMessage = '';
-
-        await this.clearCart(); 
-
-        setTimeout(() => {
-          this.$router.push(`/orders/myorders`); 
-        }, 2000);
+        // Hiển thị thông báo thành công bằng SweetAlert2
+        Swal.fire({
+          icon: 'success',
+          title: 'Order Placed Successfully!',
+          html: `Your order has been placed. <br> <strong>Order ID: ${response.data._id}</strong>`,
+          showConfirmButton: false, 
+          timer: 3000, 
+          timerProgressBar: true,
+          confirmButtonColor: '#A0522D',
+        }).then(async () => {
+          // Bọc clearCart trong try...catch riêng và chỉ hiển thị cảnh báo nếu lỗi KHÔNG phải là 404
+          try {
+            await this.clearCart(); 
+          } catch (clearCartError) {
+            console.error('Error clearing cart after successful order:', clearCartError);
+            // Chỉ hiển thị cảnh báo nếu lỗi KHÔNG phải là 404 (giỏ hàng không tìm thấy)
+            if (clearCartError.response && clearCartError.response.status !== 404) {
+              Swal.fire({
+                toast: true,
+                position: 'top-end',
+                icon: 'warning',
+                title: 'Could not clear cart. Please refresh.',
+                showConfirmButton: false,
+                timer: 3000
+              });
+            }
+          }
+          this.$router.push(`/orders/myorders`); // Chuyển hướng đến trang đơn hàng của tôi
+        });
 
       } catch (err) {
         console.error('Error placing order:', err);
-        this.orderErrorMessage = err.response?.data?.message || 'Failed to place order. Please try again.';
-        this.orderSuccessMessage = '';
+        // Hiển thị thông báo lỗi bằng SweetAlert2
+        Swal.fire({
+          icon: 'error',
+          title: 'Order Failed!',
+          text: err.response?.data?.message || 'Failed to place order. Please try again.',
+          confirmButtonColor: '#A0522D',
+        });
       } finally {
         this.isPlacingOrder = false;
       }
@@ -432,25 +475,7 @@ export default {
   opacity: 0.8;
 }
 
-.order-message {
-  padding: 10px 15px;
-  margin-top: 20px;
-  border-radius: 8px;
-  font-weight: 500;
-  text-align: center;
-}
-
-.order-message.error {
-  background-color: #ffe6e6;
-  color: #cc0000;
-  border: 1px solid #cc0000;
-}
-
-.order-message.success {
-  background-color: #e6ffe6;
-  color: #008000;
-  border: 1px solid #008000;
-}
+/* Đã xóa CSS cho .order-message vì không còn sử dụng */
 
 .order-summary-section {
   flex: 1;

@@ -64,6 +64,7 @@
 <script>
 import apiClient from '@/helpers/api';
 import { mapGetters } from 'vuex';
+import Swal from 'sweetalert2'; // Import SweetAlert2
 
 export default {
   name: 'AdminUserListPage',
@@ -83,8 +84,14 @@ export default {
   async created() {
     // Kiểm tra quyền admin
     if (!this.isAdmin) {
-      alert('You are not authorized to view this page. Admin access required.');
-      this.$router.push('/');
+      Swal.fire({
+        icon: 'error',
+        title: 'Unauthorized Access',
+        text: 'You are not authorized to view this page. Admin access required.',
+        confirmButtonColor: '#A0522D',
+      }).then(() => {
+        this.$router.push('/');
+      });
       return;
     }
     await this.fetchAllUsers();
@@ -98,9 +105,15 @@ export default {
         const response = await apiClient.get('/admin/users');
         this.users = response.data;
       } catch (err) {
-        console.error('Error fetching users:', err);
+        console.error('Error fetching users:', err); // Giữ console.error cho debug
         this.error = err.response?.data?.message || 'Failed to load users. Server error.';
         this.users = [];
+        Swal.fire({
+          icon: 'error',
+          title: 'Error Loading Users',
+          text: this.error,
+          confirmButtonColor: '#A0522D',
+        });
       } finally {
         this.isLoading = false;
       }
@@ -110,7 +123,12 @@ export default {
     async updateUserRole(userId, newRole) {
       // Ngăn admin tự hạ quyền của mình
       if (userId === this.currentAdminId && newRole !== 'admin') {
-        alert('You cannot downgrade your own role!');
+        Swal.fire({
+          icon: 'warning',
+          title: 'Action Not Allowed',
+          text: 'You cannot downgrade your own role!',
+          confirmButtonColor: '#A0522D',
+        });
         // Fetch lại để khôi phục trạng thái cũ trên UI
         await this.fetchAllUsers(); 
         return;
@@ -120,11 +138,25 @@ export default {
       this.error = null;
       try {
         await apiClient.put(`/admin/users/${userId}`, { role: newRole }); // Gọi API updateUser
-        alert(`User ${userId} role updated to ${newRole}.`);
+        Swal.fire({
+          icon: 'success',
+          title: 'Role Updated!',
+          text: `User role for ${userId} updated to ${newRole}.`,
+          showConfirmButton: false,
+          timer: 1500,
+          timerProgressBar: true,
+          confirmButtonColor: '#A0522D',
+        });
         await this.fetchAllUsers(); // Fetch lại danh sách sau khi cập nhật
       } catch (err) {
-        console.error(`Error updating user role ${userId}:`, err);
+        console.error(`Error updating user role ${userId}:`, err); // Giữ console.error cho debug
         this.error = err.response?.data?.message || 'Failed to update user role. Server error.';
+        Swal.fire({
+          icon: 'error',
+          title: 'Update Failed',
+          text: this.error,
+          confirmButtonColor: '#A0522D',
+        });
         // Nếu lỗi, fetch lại để khôi phục trạng thái cũ trên UI
         await this.fetchAllUsers(); 
       } finally {
@@ -132,15 +164,31 @@ export default {
       }
     },
 
-    // Xác nhận xóa người dùng
-    confirmDelete(userId) {
+    // Xác nhận xóa người dùng bằng SweetAlert2
+    async confirmDelete(userId) {
       // Ngăn admin tự xóa tài khoản của mình
       if (userId === this.currentAdminId) {
-        alert('You cannot delete your own account!');
+        Swal.fire({
+          icon: 'warning',
+          title: 'Action Not Allowed',
+          text: 'You cannot delete your own account!',
+          confirmButtonColor: '#A0522D',
+        });
         return;
       }
 
-      if (confirm('Are you sure you want to delete this user? This action cannot be undone.')) {
+      const result = await Swal.fire({
+        title: 'Are you sure?',
+        text: 'You are about to delete this user. This action cannot be undone!',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#dc3545', // Red for delete
+        cancelButtonColor: '#6c757d', // Grey for cancel
+        confirmButtonText: 'Yes, delete it!',
+        cancelButtonText: 'No, cancel!',
+      });
+
+      if (result.isConfirmed) {
         this.deleteUser(userId);
       }
     },
@@ -151,11 +199,25 @@ export default {
       this.error = null;
       try {
         await apiClient.delete(`/admin/users/${userId}`);
-        alert('User deleted successfully!');
+        Swal.fire({
+          icon: 'success',
+          title: 'Deleted!',
+          text: 'User has been deleted successfully.',
+          showConfirmButton: false,
+          timer: 1500,
+          timerProgressBar: true,
+          confirmButtonColor: '#A0522D',
+        });
         await this.fetchAllUsers(); // Fetch lại danh sách sau khi xóa
       } catch (err) {
-        console.error(`Error deleting user ${userId}:`, err);
+        console.error(`Error deleting user ${userId}:`, err); // Giữ console.error cho debug
         this.error = err.response?.data?.message || 'Failed to delete user. Server error.';
+        Swal.fire({
+          icon: 'error',
+          title: 'Deletion Failed',
+          text: this.error,
+          confirmButtonColor: '#A0522D',
+        });
       } finally {
         this.isLoading = false;
       }
@@ -264,6 +326,11 @@ export default {
   outline: none;
   width: 100px;
   text-transform: capitalize;
+  appearance: none; /* Remove default arrow */
+  background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%236c757d%22%20d%3D%22M287%2C197.3L159.2%2C69.5c-3.2-3.2-8.3-3.2-11.5%2C0L5.4%2C197.3c-3.2%2C3.2-3.2%2C8.3%2C0%2C11.5l11.5%2C11.5c3.2%2C3.2%2C8.3%2C3.2%2C11.5%2C0l118.8-118.8l118.8%2C118.8c3.2%2C3.2%2C8.3%2C3.2%2C11.5%2C0l11.5-11.5C290.2%2C205.6%2C290.2%2C200.5%2C287%2C197.3z%22%2F%3E%3C%2Fsvg%3E');
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  background-size: 10px auto;
 }
 
 .role-select.admin {

@@ -51,7 +51,7 @@
           <div class="order-items-table">
             <div class="table-header">
               <div class="col-item">Item</div>
-              <div class="col-qty">Qty</div>
+              <div class="col-qty">Quantity</div>
               <div class="col-price">Price</div>
               <div class="col-total">Total</div>
             </div>

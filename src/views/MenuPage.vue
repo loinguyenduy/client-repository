@@ -4,98 +4,59 @@
     <div class="container">
       <h1>Our Delicious Menu</h1>
 
-      <!-- Thanh tìm kiếm và Bộ lọc danh mục -->
+      <!-- Search & Filter Controls -->
       <div class="controls-bar">
-        <div class="search-box">
-          <input
-            type="text"
-            v-model="searchKeyword"
-            @keyup.enter="applyFilters"
-            placeholder="Search dishes by name..."
-            class="search-input"
-          />
+        <div class="search-input-group">
+          <input type="text" v-model.trim="searchKeyword" @keyup.enter="applyFilters" placeholder="Search for dishes..." class="search-input" />
           <button @click="applyFilters" class="search-button">
             <i class="fas fa-search"></i>
           </button>
         </div>
 
-        <div class="filter-box">
-          <label for="categoryFilter" class="filter-label"
-            >Filter by Category:</label
-          >
-          <select
-            id="categoryFilter"
-            v-model="selectedCategory"
-            @change="applyFilters"
-            class="category-select"
-          >
-            <option value="All">All Categories</option>
-            <option
-              v-for="category in categories"
-              :key="category._id"
-              :value="category.name"
-            >
+        <div class="filter-group"> <!-- Đổi tên từ filter-sort-group thành filter-group -->
+          <select v-model="selectedCategory" @change="applyFilters" class="filter-select">
+            <option value="">All Categories</option>
+            <option v-for="category in categories" :key="category._id" :value="category.name">
               {{ category.name }}
             </option>
           </select>
+          <!-- Đã xóa phần tử select cho sort ở đây -->
         </div>
       </div>
 
-      <!-- Hiển thị thông báo loading hoặc lỗi -->
-      <div v-if="isLoadingProducts" class="loading-spinner">
-        Loading menu...
-      </div>
-      <div v-else-if="products.length === 0" class="no-products-message">
-        No dishes found matching your criteria.
+      <!-- Display Loading Spinner -->
+      <div v-if="isLoadingProducts" class="loading-spinner">Loading menu...</div>
+
+      <!-- Display Error Message if any -->
+      <div v-else-if="error" class="error-message">
+        {{ error }}
       </div>
 
-      <!-- Danh sách sản phẩm -->
+      <!-- Display when no products are found -->
+      <div v-else-if="products.length === 0" class="no-products-message">
+        <p>No products found matching your criteria.</p>
+        <button @click="resetFilters" class="btn-primary">Reset Filters</button>
+      </div>
+
+      <!-- Product Grid -->
       <div v-else class="product-grid">
-        <div
-          v-for="product in products"
-          :key="product._id"
-          class="product-card"
-        >
-          <img
-            :src="getBackendImageUrl(product.image)"
-            :alt="product.name"
-            class="product-image"
-          />
-          <div class="product-info">
-            <h3 class="product-name">{{ product.name }}</h3>
-            <p class="product-description">
-              {{ product.description.substring(0, 100) + "..." }}
-            </p>
-            <p class="product-price">${{ product.price.toFixed(2) }}</p>
-            <div class="product-actions">
-              <router-link :to="`/products/${product._id}`" class="btn-details"
-                >View Details</router-link
-              >
-              <button
-                @click="handleAddToCart(product)"
-                :disabled="isAddingToCartMap[product._id]"
-                class="btn-add-to-cart"
-              >
-                <span v-if="isAddingToCartMap[product._id]">Adding...</span>
-                <span v-else-if="!isLoggedIn">Login to Add</span>
-                <span v-else>Add to Cart</span>
-              </button>
-            </div>
-            <!-- Thông báo thêm vào giỏ hàng cho từng sản phẩm -->
-            <div
-              v-if="addToCartMessageMap[product._id]"
-              :class="[
-                'add-to-cart-message',
-                addToCartMessageTypeMap[product._id],
-              ]"
-            >
-              {{ addToCartMessageMap[product._id] }}
-            </div>
+        <div v-for="product in products" :key="product._id" class="product-card">
+          <img :src="getBackendImageUrl(product.image)" :alt="product.name" class="product-image" />
+          <h3 class="product-name">{{ product.name }}</h3>
+          <p class="product-category">{{ product.category?.name || 'Uncategorized' }}</p>
+          <p class="product-price">${{ product.price.toFixed(2) }}</p>
+          <div class="product-actions">
+            <router-link :to="`/products/${product._id}`" class="btn-view-details">View Details</router-link>
+            <button @click="handleAddToCart(product)" :disabled="isAddingToCartMap[product._id]" class="btn-add-to-cart">
+              <span v-if="isAddingToCartMap[product._id]">Adding...</span>
+              <span v-else-if="!isLoggedIn">Login to Add</span>
+              <span v-else>Add to Cart</span>
+            </button>
           </div>
         </div>
       </div>
 
-      <!-- Phân trang -->
+      <!-- Pagination Controls -->
       <div v-if="totalPages > 1" class="pagination-controls">
         <button
           @click="changePage(currentPage - 1)"
@@ -120,58 +81,55 @@
 </template>
 
 <script>
-import apiClient from "@/helpers/api";
-import { mapGetters, mapActions } from "vuex";
+import apiClient from '@/helpers/api';
+import { mapGetters, mapActions } from 'vuex';
+import Swal from 'sweetalert2'; // Import SweetAlert2
 
 export default {
-  name: "MenuPage",
+  name: 'MenuPage',
   data() {
     return {
       products: [],
       categories: [],
-      searchKeyword: "",
-      selectedCategory: "All",
+      isLoadingProducts: true,
+      error: null,
+      searchKeyword: '',
+      selectedCategory: '',
+      // Đã xóa selectedSort ở đây
       currentPage: 1,
       totalPages: 1,
-      totalProducts: 0,
       limit: 10,
-      isLoadingProducts: false,
-      isLoadingCategories: false,
-      isAddingToCartMap: {},
-      addToCartMessageMap: {},
-      addToCartMessageTypeMap: {},
+      isAddingToCartMap: {}, // Object to track loading state for each Add to Cart button
     };
   },
   computed: {
     ...mapGetters("user", ["isLoggedIn"]),
   },
   async created() {
-    await Promise.all([this.fetchCategories(), this.fetchProducts()]);
+    await this.fetchCategories();
+    await this.fetchProducts();
   },
   methods: {
-    ...mapActions("cart", ["addToCart"]),
+    ...mapActions('cart', ['addToCart']),
 
     getBackendImageUrl(imagePath) {
-      const backendBaseUrl = apiClient.defaults.baseURL.replace("/api", "");
-      if (!imagePath || imagePath === "/uploads/placeholder.jpg") {
-        return "https://via.placeholder.com/200x200/f0f0f0/cccccc?text=No+Image";
+      const backendBaseUrl = apiClient.defaults.baseURL.replace('/api', '');
+      if (!imagePath || imagePath === '/uploads/placeholder.jpg') {
+        return 'https://via.placeholder.com/250x180/f0f0f0/cccccc?text=No+Image'; 
       }
-      if (imagePath.startsWith("http://") || imagePath.startsWith("https://")) {
+      if (imagePath.startsWith('http://') || imagePath.startsWith('https://')) {
         return imagePath;
       }
-      return `${backendBaseUrl}${
-        imagePath.startsWith("/") ? "" : "/"
-      }${imagePath}`;
+      return `${backendBaseUrl}${imagePath.startsWith('/') ? '' : '/'}${imagePath}`;
     },
 
     async fetchCategories() {
       this.isLoadingCategories = true;
       try {
-        const response = await apiClient.get("/categories");
+        const response = await apiClient.get('/categories');
         this.categories = response.data;
-      } catch (error) {
-        console.error("Error fetching categories:", error);
-        this.categories = [];
+      } catch (err) {
+        console.error('Error fetching categories:', err);
       } finally {
         this.isLoadingCategories = false;
       }
@@ -179,26 +137,50 @@ export default {
 
     async fetchProducts() {
       this.isLoadingProducts = true;
+      this.error = null;
       try {
-        let url = `/products?page=${this.currentPage}&limit=${this.limit}`;
-        if (this.searchKeyword) {
-          url += `&keyword=${this.searchKeyword}`;
-        }
-        if (this.selectedCategory && this.selectedCategory !== "All") {
-          url += `&category=${this.selectedCategory}`;
-        }
+        const params = {
+          page: this.currentPage,
+          limit: this.limit,
+        };
 
-        const response = await apiClient.get(url);
+        if (this.searchKeyword) {
+          params.keyword = this.searchKeyword;
+        }
+        if (this.selectedCategory) {
+          params.category = this.selectedCategory;
+        }
+        
+        // Đã xóa toàn bộ logic xử lý selectedSort ở đây
+        // if (this.selectedSort) {
+        //   switch (this.selectedSort) {
+        //     case 'price_asc':
+        //       params.sort = 'price';
+        //       params.order = 'asc';
+        //       break;
+        //     case 'price_desc':
+        //       params.sort = 'price';
+        //       params.order = 'desc';
+        //       break;
+        //     case 'name_asc':
+        //       params.sort = 'name';
+        //       params.order = 'asc';
+        //       break;
+        //     case 'name_desc':
+        //       params.sort = 'name';
+        //       params.order = 'desc';
+        //       break;
+        //   }
+        // }
+
+        const response = await apiClient.get('/products', { params });
         this.products = response.data.products;
         this.currentPage = response.data.page;
         this.totalPages = response.data.pages;
-        this.totalProducts = response.data.totalProducts;
-      } catch (error) {
-        console.error("Error fetching products:", error);
+      } catch (err) {
+        console.error('Error fetching products:', err);
+        this.error = err.response?.data?.message || 'Failed to load menu. Server error.';
         this.products = [];
-        this.currentPage = 1;
-        this.totalPages = 1;
-        this.totalProducts = 0;
       } finally {
         this.isLoadingProducts = false;
       }
@@ -216,44 +198,58 @@ export default {
       }
     },
 
+    resetFilters() {
+      this.searchKeyword = '';
+      this.selectedCategory = '';
+      // Đã xóa this.selectedSort = ''; ở đây
+      this.currentPage = 1;
+      this.fetchProducts();
+    },
+
     async handleAddToCart(product) {
-      // Reset thông báo cho sản phẩm này
-      // THAY THẾ this.$set BẰNG GÁN TRỰC TIẾP
-      this.addToCartMessageMap[product._id] = "";
-      this.addToCartMessageTypeMap[product._id] = "";
+      // Use direct assignment for Vue 3 reactivity
+      this.isAddingToCartMap[product._id] = true;
 
       if (!this.isLoggedIn) {
-        // THAY THẾ this.$set BẰNG GÁN TRỰC TIẾP
-        this.addToCartMessageMap[product._id] =
-          "You need to login to add items to cart.";
-        this.addToCartMessageTypeMap[product._id] = "error";
-
-        this.$router.push("/login");
+        Swal.fire({
+          toast: true,
+          position: 'top-end',
+          icon: 'info',
+          title: 'Please login to add items. Redirecting...',
+          showConfirmButton: false,
+          timer: 1500,
+          timerProgressBar: true,
+        }).then(() => {
+          // Redirect to login page, passing the current full path as a redirect query parameter
+          this.$router.push({ path: "/login", query: { redirect: this.$route.fullPath } });
+          this.isAddingToCartMap[product._id] = false; // Reset loading state
+        });
         return;
       }
 
-      // THAY THẾ this.$set BẰNG GÁN TRỰC TIẾP
-      this.isAddingToCartMap[product._id] = true;
       try {
         await this.addToCart({ productId: product._id, quantity: 1 });
-        // THAY THẾ this.$set BẰNG GÁN TRỰC TIẾP
-        this.addToCartMessageMap[
-          product._id
-        ] = `${product.name} added to cart!`;
-        this.addToCartMessageTypeMap[product._id] = "success";
-
-        setTimeout(() => {
-          // THAY THẾ this.$set BẰNG GÁN TRỰC TIẾP
-          this.addToCartMessageMap[product._id] = "";
-        }, 3000);
+        Swal.fire({
+          toast: true,
+          position: 'top-end',
+          icon: 'success',
+          title: `${product.name} added to cart!`,
+          showConfirmButton: false,
+          timer: 1000,
+          timerProgressBar: true,
+        });
       } catch (err) {
-        console.error("Error adding to cart:", err);
-        // THAY THẾ this.$set BẰNG GÁN TRỰC TIẾP
-        this.addToCartMessageMap[product._id] =
-          err.message || "Failed to add to cart.";
-        this.addToCartMessageTypeMap[product._id] = "error";
+        console.error('Error adding to cart:', err);
+        Swal.fire({
+          toast: true,
+          position: 'top-end',
+          icon: 'error',
+          title: err.message || 'Failed to add product to cart. Please try again.',
+          showConfirmButton: false,
+          timer: 2000,
+          timerProgressBar: true,
+        });
       } finally {
-        // THAY THẾ this.$set BẰNG GÁN TRỰC TIẾP
         this.isAddingToCartMap[product._id] = false;
       }
     },
@@ -262,10 +258,23 @@ export default {
 </script>
 
 <style scoped>
-/* CSS cho trang thực đơn */
+/* CSS cho trang Menu */
 .menu-page {
   background-color: var(--bg-light);
-  padding: 40px 0;
+  padding: 40px 20px;
+  min-height: calc(100vh - 150px);
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+.container {
+  max-width: 1200px;
+  width: 100%;
+  background-color: #fff;
+  border-radius: 10px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  padding: 40px;
 }
 
 .menu-page h1 {
@@ -276,24 +285,24 @@ export default {
   font-family: var(--font-family-heading);
 }
 
+/* Controls Bar */
 .controls-bar {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 40px;
+  gap: 20px;
+  margin-bottom: 30px;
   padding: 20px;
-  background-color: #fff;
+  background-color: #f0f0f0;
   border-radius: 10px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-  max-width: 1200px;
-  margin-left: auto;
-  margin-right: auto;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
 }
 
-.search-box {
+.search-input-group {
   display: flex;
   flex-grow: 1;
-  margin-right: 20px;
+  max-width: 400px;
 }
 
 .search-input {
@@ -303,6 +312,11 @@ export default {
   border-radius: 8px 0 0 8px;
   font-size: 1em;
   outline: none;
+  transition: border-color 0.3s ease;
+}
+
+.search-input:focus {
+  border-color: var(--primary-color);
 }
 
 .search-button {
@@ -319,83 +333,107 @@ export default {
   background-color: darken(var(--primary-color), 10%);
 }
 
-.filter-box {
+.filter-group { /* Đổi tên class */
   display: flex;
-  align-items: center;
-  gap: 10px;
+  gap: 15px;
+  flex-wrap: wrap;
 }
 
-.filter-label {
-  font-weight: 600;
-  color: var(--text-color);
-  white-space: nowrap;
-}
-
-.category-select {
-  padding: 10px 15px;
+.filter-select { /* Chỉ còn filter-select */
+  padding: 12px 15px;
   border: 1px solid var(--border-color);
   border-radius: 8px;
   font-size: 1em;
-  background-color: #fff;
-  cursor: pointer;
   outline: none;
+  appearance: none; /* Remove default arrow */
+  background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23A0522D%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-6.5%200-12.3%203.2-16.1%208.1-3.7%204.9-4.9%2011-3.6%2017.3l133.3%20170.9c5.1%206.5%2012.8%2010.1%2021%2010.1s15.9-3.6%2021-10.1l133.3-170.9c1.3-6.3.1-12.4-3.6-17.3z%22%2F%3E%3C%2Fsvg%3E');
+  background-repeat: no-repeat;
+  background-position: right 15px center;
+  background-size: 1.2em;
+  padding-right: 40px; /* Space for the icon */
+  cursor: pointer;
+}
+
+.loading-spinner, .error-message, .no-products-message {
+  text-align: center;
+  font-size: 1.2em;
+  color: var(--light-text-color);
+  width: 100%;
+  padding: 50px 0;
+}
+
+.error-message {
+  color: #cc0000;
+  background-color: #ffe6e6;
+  border: 1px solid #cc0000;
+  border-radius: 8px;
+  padding: 20px;
+}
+
+.no-products-message .btn-primary {
+  margin-top: 20px;
+  display: inline-block;
+  background-color: var(--primary-color);
+  color: #fff;
+  padding: 12px 25px;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: bold;
+  transition: background-color 0.3s ease;
+}
+
+.no-products-message .btn-primary:hover {
+  background-color: darken(var(--primary-color), 10%);
 }
 
 /* Product Grid */
 .product-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 30px;
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 20px;
+  margin-top: 30px;
 }
 
 .product-card {
   background-color: #fff;
   border-radius: 10px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+  padding: 20px;
+  text-align: center;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
 .product-card:hover {
   transform: translateY(-5px);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.12);
 }
 
 .product-image {
   width: 100%;
-  height: 220px; /* Chiều cao cố định cho ảnh */
-  object-fit: cover;
-}
-
-.product-info {
-  padding: 20px;
-  flex-grow: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
+  height: 180px; /* Fixed height for consistency */
+  object-fit: cover; /* Crop image to fit */
+  border-radius: 8px;
+  margin-bottom: 15px;
 }
 
 .product-name {
-  font-size: 1.6em;
+  font-size: 1.4em;
   color: var(--text-color);
-  margin-bottom: 10px;
+  margin-bottom: 5px;
   font-family: var(--font-family-heading);
+  white-space: nowrap; /* Prevent text wrapping */
+  overflow: hidden; /* Hide overflowed text */
+  text-overflow: ellipsis; /* Add ellipsis for overflow */
 }
 
-.product-description {
-  font-size: 0.95em;
+.product-category {
+  font-size: 0.9em;
   color: var(--light-text-color);
-  margin-bottom: 15px;
-  line-height: 1.5;
+  margin-bottom: 10px;
 }
 
 .product-price {
-  font-size: 1.3em;
+  font-size: 1.2em;
   color: var(--primary-color);
   font-weight: bold;
   margin-bottom: 20px;
@@ -405,43 +443,50 @@ export default {
   display: flex;
   justify-content: space-between;
   gap: 10px;
-  margin-top: auto; /* Đẩy xuống cuối card */
+  margin-top: auto; /* Push to the bottom of the card */
 }
 
-.btn-details {
+.btn-view-details {
   display: inline-block;
-  background-color: #6c757d;
+  background-color: #6c757d; 
   color: #fff;
-  padding: 10px 15px;
+  padding: 10px 20px;
   border-radius: 8px;
   text-decoration: none;
   font-weight: bold;
   transition: background-color 0.3s ease;
-  flex-grow: 1;
+  flex-grow: 1; /* Allow button to grow */
   text-align: center;
 }
 
-.btn-details:hover {
+.btn-view-details:hover {
   background-color: darken(#6c757d, 10%);
 }
 
 .btn-add-to-cart {
   background-color: var(--accent-color);
   color: var(--text-color);
-  padding: 10px 15px;
+  padding: 10px 20px;
   border: none;
   border-radius: 8px;
+  font-size: 1em;
   font-weight: bold;
   cursor: pointer;
   transition: background-color 0.3s ease;
-  flex-grow: 1;
+  flex-grow: 1; /* Allow button to grow */
 }
 
-.btn-add-to-cart:hover {
+.btn-add-to-cart:hover:not(:disabled) {
   background-color: darken(var(--accent-color), 10%);
 }
 
-/* Phân trang */
+.btn-add-to-cart:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+/* Pagination Controls */
 .pagination-controls {
   display: flex;
   justify-content: center;
@@ -485,39 +530,17 @@ export default {
   margin-top: 40px;
 }
 
-/* Thông báo thêm vào giỏ hàng */
-.add-to-cart-message {
-  padding: 8px 12px;
-  margin-top: 10px;
-  border-radius: 6px;
-  font-size: 0.9em;
-  font-weight: 500;
-  text-align: center;
-}
-
-.add-to-cart-message.error {
-  background-color: #ffe6e6;
-  color: #cc0000;
-  border: 1px solid #cc0000;
-}
-
-.add-to-cart-message.success {
-  background-color: #e6ffe6;
-  color: #008000;
-  border: 1px solid #008000;
-}
-
 /* Responsive adjustments */
 @media (max-width: 992px) {
   .controls-bar {
     flex-direction: column;
     gap: 20px;
   }
-  .search-box {
+  .search-input-group {
     width: 100%;
-    margin-right: 0;
+    max-width: 100%;
   }
-  .filter-box {
+  .filter-group { /* Đổi tên class */
     width: 100%;
     justify-content: center;
   }
@@ -525,7 +548,7 @@ export default {
 
 @media (max-width: 768px) {
   .product-grid {
-    grid-template-columns: 1fr; /* Một cột trên màn hình nhỏ */
+    grid-template-columns: 1fr; /* One column on small screens */
   }
 }
 </style>

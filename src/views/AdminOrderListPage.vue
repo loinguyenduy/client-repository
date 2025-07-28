@@ -39,6 +39,7 @@
                   v-model="order.status"
                   @change="updateStatus(order._id, order.status)"
                   :class="['status-select', order.status]"
+                  :disabled="statusUpdateLoading[order._id]"
                 >
                   <option value="pending">Pending</option>
                   <option value="processing">Processing</option>
@@ -65,6 +66,7 @@
 <script>
 import apiClient from "@/helpers/api";
 import { mapGetters } from "vuex";
+import Swal from 'sweetalert2'; // Import SweetAlert2
 
 export default {
   name: "AdminOrderListPage",
@@ -80,19 +82,19 @@ export default {
     ...mapGetters("user", ["isAdmin"]), // Lấy trạng thái admin từ user module
   },
   async created() {
-    console.log("AdminOrderListPage: Component created."); // Debug log
     // Kiểm tra quyền admin trước khi fetch đơn hàng
     if (!this.isAdmin) {
-      console.warn("AdminOrderListPage: User is not admin. Redirecting."); // Debug log
-      alert("You are not authorized to view this page. Admin access required.");
-      this.$router.push("/"); // Chuyển hướng về trang chủ nếu không phải admin
+      Swal.fire({
+        icon: 'error',
+        title: 'Unauthorized Access',
+        text: 'You are not authorized to view this page. Admin access required.',
+        confirmButtonColor: '#A0522D',
+      }).then(() => {
+        this.$router.push("/"); // Chuyển hướng về trang chủ nếu không phải admin
+      });
       return;
     }
-    console.log("AdminOrderListPage: User is admin. Fetching all orders..."); // Debug log
     await this.fetchAllOrders();
-    console.log("AdminOrderListPage: Orders fetched:", this.orders); // Debug log
-    console.log("AdminOrderListPage: isLoading after fetch:", this.isLoading); // Debug log
-    console.log("AdminOrderListPage: error after fetch:", this.error); // Debug log
   },
   methods: {
     // Lấy tất cả đơn hàng từ backend (chỉ admin)
@@ -100,18 +102,18 @@ export default {
       this.isLoading = true;
       this.error = null;
       try {
-        console.log("AdminOrderListPage: Calling API /admin/orders"); // Debug log
         const response = await apiClient.get("/admin/orders");
         this.orders = response.data;
-        console.log("AdminOrderListPage: API response data:", response.data); // Debug log
       } catch (err) {
-        console.error(
-          "AdminOrderListPage: Error fetching all orders (admin):",
-          err
-        ); // Debug log
         this.error =
           err.response?.data?.message || "Failed to load orders. Server error.";
         this.orders = [];
+        Swal.fire({
+          icon: 'error',
+          title: 'Error Loading Orders',
+          text: this.error,
+          confirmButtonColor: '#A0522D',
+        });
       } finally {
         this.isLoading = false;
       }
@@ -119,42 +121,41 @@ export default {
 
     // Cập nhật trạng thái đơn hàng
     async updateStatus(orderId, newStatus) {
-      console.log(
-        `AdminOrderListPage: Updating status for order ${orderId} to ${newStatus}`
-      ); // Debug log
       // Đặt trạng thái loading cho đơn hàng cụ thể
-      this.statusUpdateLoading[orderId] = true; // <-- ĐÃ SỬA: Thay thế this.$set
-      console.log(
-        "AdminOrderListPage: statusUpdateLoading:",
-        this.statusUpdateLoading
-      ); // Debug log
+      this.statusUpdateLoading = { ...this.statusUpdateLoading, [orderId]: true }; // Vue 3 reactivity for adding/updating properties
 
       try {
         await apiClient.put(`/admin/orders/${orderId}/status`, {
           status: newStatus,
         });
-        alert(`Order ${orderId} status updated to ${newStatus}.`);
-        // Để đơn giản, chúng ta sẽ fetch lại toàn bộ danh sách để đảm bảo đồng bộ
-        await this.fetchAllOrders();
+        
+        Swal.fire({
+          icon: 'success',
+          title: 'Status Updated!',
+          text: `Order #${orderId} status updated successfully!.`, // Sử dụng formatStatus nếu bạn muốn hiển thị tên trạng thái đẹp hơn
+          showConfirmButton: false,
+          timer: 2000,
+          timerProgressBar: true,
+          confirmButtonColor: '#A0522D',
+        });
+
+        // Để đảm bảo dữ liệu đồng bộ, fetch lại toàn bộ danh sách
+        await this.fetchAllOrders(); 
       } catch (err) {
-        console.error(
-          `AdminOrderListPage: Error updating status for order ${orderId}:`,
-          err
-        ); // Debug log
-        alert(
-          `Failed to update status for order ${orderId}: ${
-            err.response?.data?.message || "Server error."
-          }`
-        );
+        const errorMessage = err.response?.data?.message || "Server error.";
+        Swal.fire({
+          icon: 'error',
+          title: 'Update Failed',
+          text: `Failed to update status for order #${orderId}: ${errorMessage}`,
+          confirmButtonColor: '#A0522D',
+        });
         // Nếu cập nhật thất bại, fetch lại để khôi phục trạng thái cũ trên UI
         await this.fetchAllOrders();
       } finally {
         // Xóa trạng thái loading cho đơn hàng cụ thể
-        delete this.statusUpdateLoading[orderId]; // <-- ĐÃ SỬA: Thay thế this.$delete
-        console.log(
-          "AdminOrderListPage: statusUpdateLoading after finally:",
-          this.statusUpdateLoading
-        ); // Debug log
+        const newStatusUpdateLoading = { ...this.statusUpdateLoading };
+        delete newStatusUpdateLoading[orderId];
+        this.statusUpdateLoading = newStatusUpdateLoading;
       }
     },
 
@@ -169,7 +170,36 @@ export default {
       };
       return new Date(dateString).toLocaleDateString(undefined, options);
     },
+    // Hàm định dạng trạng thái (tái sử dụng từ AdminOrderDetailsPage)
+    formatStatus(status) {
+      switch (status) {
+        case 'pending': return 'Pending';
+        case 'processing': return 'Processing';
+        case 'completed': return 'Completed';
+        case 'cancelled': return 'Cancelled';
+        default: return status;
+      }
+    }
   },
+  watch: {
+    // Theo dõi thay đổi trạng thái admin để fetch đơn hàng lại hoặc chuyển hướng
+    isAdmin(newVal) {
+      if (newVal) {
+        this.fetchAllOrders();
+      } else {
+        // Nếu không còn là admin, xóa dữ liệu và chuyển hướng
+        this.orders = [];
+        Swal.fire({
+          icon: 'error',
+          title: 'Access Revoked',
+          text: 'Your admin access has been revoked. Redirecting to home page.',
+          confirmButtonColor: '#A0522D',
+        }).then(() => {
+          this.$router.push('/');
+        });
+      }
+    }
+  }
 };
 </script>
 
@@ -262,6 +292,11 @@ export default {
   cursor: pointer;
   outline: none;
   width: 120px; /* Đảm bảo chiều rộng đủ cho dropdown */
+  appearance: none; /* Remove default arrow */
+  background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%236c757d%22%20d%3D%22M287%2C197.3L159.2%2C69.5c-3.2-3.2-8.3-3.2-11.5%2C0L5.4%2C197.3c-3.2%2C3.2-3.2%2C8.3%2C0%2C11.5l11.5%2C11.5c3.2%2C3.2%2C8.3%2C3.2%2C11.5%2C0l118.8-118.8l118.8%2C118.8c3.2%2C3.2%2C8.3%2C3.2%2C11.5%2C0l11.5-11.5C290.2%2C205.6%2C290.2%2C200.5%2C287%2C197.3z%22%2F%3E%3C%2Fsvg%3E');
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  background-size: 10px auto;
 }
 
 /* Màu sắc cho dropdown trạng thái */

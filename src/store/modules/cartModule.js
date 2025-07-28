@@ -75,7 +75,7 @@ const cartModule = {
     },
     SET_ERROR(state, error) {
       state.error = error;
-      state.isLoading = false; // Dừng loading khi có lỗi
+      state.isLoading = false;
     },
   },
 

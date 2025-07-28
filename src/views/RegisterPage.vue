@@ -3,10 +3,8 @@
   <div class="register-page">
     <div class="register-container">
       <h2>Register Account</h2>
-      <!-- Hiển thị thông báo lỗi hoặc thành công -->
-      <div v-if="message" :class="['message', messageType]">
-        {{ message }}
-      </div>
+      <!-- Đã loại bỏ phần hiển thị thông báo lỗi/thành công thông thường, 
+        vì SweetAlert2 sẽ xử lý điều này -->
 
       <form @submit.prevent="submitRegister" class="register-form">
         <div class="form-group">
@@ -55,7 +53,8 @@
 </template>
 
 <script>
-import { mapActions } from 'vuex'; // Import mapActions để gọi Vuex actions
+import { mapActions } from 'vuex';
+import Swal from 'sweetalert2'; // Import SweetAlert2
 
 export default {
   name: 'RegisterPage',
@@ -65,49 +64,60 @@ export default {
       email: '',
       password: '',
       confirmPassword: '',
-      phoneNumber: '', // <-- Thêm trường này
-      address: '',     // <-- Thêm trường này
-      isLoading: false, // Trạng thái loading cho nút submit
-      message: '',      // Thông báo lỗi/thành công
-      messageType: ''   // Loại thông báo: 'success' hoặc 'error'
+      phoneNumber: '',
+      address: '',
+      isLoading: false,
+      // Đã loại bỏ 'message' và 'messageType' vì SweetAlert2 sẽ xử lý
     };
   },
   methods: {
-    // Ánh xạ action 'register' từ module 'user' của Vuex store
     ...mapActions('user', ['register']),
 
     async submitRegister() {
       this.isLoading = true; // Bắt đầu loading
-      this.message = '';     // Xóa thông báo cũ
-      this.messageType = '';
 
       // Kiểm tra mật khẩu khớp nhau
       if (this.password !== this.confirmPassword) {
-        this.message = 'Passwords do not match.';
-        this.messageType = 'error';
+        Swal.fire({
+          icon: 'error',
+          title: 'Registration Failed',
+          text: 'Passwords do not match.',
+          confirmButtonColor: '#A0522D',
+        });
         this.isLoading = false;
-        return; // Dừng hàm nếu mật khẩu không khớp
+        return;
       }
 
       try {
-        // Gọi action 'register' từ Vuex store, truyền dữ liệu người dùng
         await this.register({
           fullName: this.fullName,
           email: this.email,
           password: this.password,
-          phoneNumber: this.phoneNumber, // <-- Truyền dữ liệu này
-          address: this.address,         // <-- Truyền dữ liệu này
-          // Backend sẽ tự động xử lý vai trò mặc định là 'user'
+          phoneNumber: this.phoneNumber,
+          address: this.address,
         });
 
-        this.message = 'Registration successful! Redirecting to home page...';
-        this.messageType = 'success';
-        // Vuex action 'register' đã tự động chuyển hướng về trang chủ
-        // nên không cần router.push ở đây
+        // Hiển thị thông báo thành công bằng SweetAlert2
+        Swal.fire({
+          icon: 'success',
+          title: 'Registration Successful!',
+          text: 'Your account has been created. Redirecting to login page...',
+          showConfirmButton: false, // Không hiển thị nút OK ngay lập tức
+          timer: 2000, // Tự động đóng sau 2 giây
+          timerProgressBar: true,
+        }).then(() => {
+          // Chuyển hướng đến trang đăng nhập sau khi alert đóng
+          this.$router.push('/login');
+        });
+
       } catch (err) {
-        // Bắt lỗi được ném từ Vuex action và hiển thị cho người dùng
-        this.message = err.message || 'Registration failed. Please try again.';
-        this.messageType = 'error';
+        // Hiển thị thông báo lỗi bằng SweetAlert2
+        Swal.fire({
+          icon: 'error',
+          title: 'Registration Failed',
+          text: err.message || 'An unexpected error occurred. Please try again.',
+          confirmButtonColor: '#A0522D',
+        });
       } finally {
         this.isLoading = false; // Kết thúc loading
       }
@@ -170,9 +180,6 @@ export default {
 
 .form-group input:focus {
   border-color: var(--primary-color);
-  /* Sử dụng rgba với biến CSS nếu bạn đã định nghĩa biến màu RGB trong :root */
-  /* Ví dụ: --primary-color-rgb: 160, 82, 45; */
-  /* box-shadow: 0 0 0 3px rgba(var(--primary-color-rgb), 0.2); */
   box-shadow: 0 0 0 3px rgba(160, 82, 45, 0.2); /* Sử dụng giá trị RGB trực tiếp nếu không có biến */
   outline: none;
 }
@@ -217,24 +224,5 @@ export default {
   text-decoration: underline;
 }
 
-/* Thông báo lỗi/thành công */
-.message {
-  padding: 12px;
-  margin-bottom: 20px;
-  border-radius: 8px;
-  font-weight: 500;
-  text-align: left;
-}
-
-.message.error {
-  background-color: #ffe6e6; /* Màu nền đỏ nhạt */
-  color: #cc0000; /* Màu chữ đỏ đậm */
-  border: 1px solid #cc0000;
-}
-
-.message.success {
-  background-color: #e6ffe6; /* Màu nền xanh lá nhạt */
-  color: #008000; /* Màu chữ xanh lá đậm */
-  border: 1px solid #008000;
-}
+/* Đã loại bỏ CSS cho .message và .message.error/.success vì SweetAlert2 sẽ xử lý */
 </style>

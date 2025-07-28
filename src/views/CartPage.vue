@@ -74,6 +74,7 @@
 <script>
 import apiClient from '@/helpers/api';
 import { mapGetters, mapActions } from 'vuex';
+import Swal from 'sweetalert2'; // Import SweetAlert2
 
 export default {
   name: 'CartPage',
@@ -85,8 +86,14 @@ export default {
   async created() {
     // Kiểm tra đăng nhập trước khi fetch giỏ hàng
     if (!this.isLoggedIn) {
-      alert('Bạn cần đăng nhập để xem giỏ hàng của mình.');
-      this.$router.push('/login');
+      Swal.fire({
+        icon: 'info',
+        title: 'Login Required',
+        text: 'You need to login to view your cart.',
+        confirmButtonColor: '#A0522D',
+      }).then(() => {
+        this.$router.push('/login');
+      });
       return;
     }
     await this.fetchCart(); // Fetch giỏ hàng khi component được tạo
@@ -116,7 +123,12 @@ export default {
         await this.updateCartQuantity({ productId, quantity: newQuantity });
       } catch (err) {
         console.error('Error updating quantity:', err);
-        alert(err.message || 'Failed to update quantity.'); // Hiển thị lỗi
+        Swal.fire({
+          icon: 'error',
+          title: 'Update Failed',
+          text: err.message || 'Failed to update quantity.',
+          confirmButtonColor: '#A0522D',
+        });
       }
     },
 
@@ -132,30 +144,84 @@ export default {
 
     // Xử lý xóa sản phẩm khỏi giỏ hàng
     async handleRemoveFromCart(productId) {
-      if (confirm('Are you sure you want to remove this item from your cart?')) {
-        try {
-          await this.removeFromCart(productId);
-        } catch (err) {
-          console.error('Error removing item:', err);
-          alert(err.message || 'Failed to remove item from cart.');
+      Swal.fire({
+        title: 'Are you sure?',
+        text: 'Do you want to remove this item from your cart?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#A0522D',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Yes, remove it!'
+      }).then(async (result) => {
+        if (result.isConfirmed) {
+          try {
+            await this.removeFromCart(productId);
+            Swal.fire({
+              icon: 'success',
+              title: 'Removed!',
+              text: 'Item has been removed from your cart.',
+              showConfirmButton: false,
+              timer: 1500,
+            });
+          } catch (err) {
+            console.error('Error removing item:', err);
+            Swal.fire({
+              icon: 'error',
+              title: 'Removal Failed',
+              text: err.message || 'Failed to remove item from cart.',
+              confirmButtonColor: '#A0522D',
+            });
+          }
         }
-      }
+      });
     },
 
     // Xử lý xóa toàn bộ giỏ hàng
     async handleClearCart() {
-      if (confirm('Are you sure you want to clear your entire cart?')) {
-        try {
-          await this.clearCart();
-        } catch (err) {
-          console.error('Error clearing cart:', err);
-          alert(err.message || 'Failed to clear cart.');
+      Swal.fire({
+        title: 'Are you sure?',
+        text: 'Do you want to clear your entire cart?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#A0522D',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Yes, clear it!'
+      }).then(async (result) => {
+        if (result.isConfirmed) {
+          try {
+            await this.clearCart();
+            Swal.fire({
+              icon: 'success',
+              title: 'Cart Cleared!',
+              text: 'Your cart has been emptied.',
+              showConfirmButton: false,
+              timer: 1500,
+            });
+          } catch (err) {
+            console.error('Error clearing cart:', err);
+            Swal.fire({
+              icon: 'error',
+              title: 'Clear Failed',
+              text: err.message || 'Failed to clear cart.',
+              confirmButtonColor: '#A0522D',
+            });
+          }
         }
-      }
+      });
     },
 
     // Xử lý tiến hành thanh toán
     handleCheckout() {
+      // Kiểm tra xem giỏ hàng có rỗng không trước khi chuyển hướng
+      if (this.getCartItems.length === 0) {
+        Swal.fire({
+          icon: 'info',
+          title: 'Cart Empty',
+          text: 'Your cart is empty. Please add items before proceeding to checkout.',
+          confirmButtonColor: '#A0522D',
+        });
+        return;
+      }
       this.$router.push('/checkout');
     },
   },
@@ -165,8 +231,6 @@ export default {
       if (newVal) {
         this.fetchCart();
       }
-      // Không cần else ở đây vì Vuex action logout đã tự clear cart.
-      // Tránh gán trực tiếp getter: this.getCartItems = [];
     }
   }
 };

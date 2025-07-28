@@ -71,6 +71,7 @@
 <script>
 import apiClient from '@/helpers/api';
 import { mapGetters } from 'vuex';
+import Swal from 'sweetalert2'; // Import SweetAlert2
 
 export default {
   name: 'AdminProductFormPage',
@@ -102,8 +103,14 @@ export default {
   async created() {
     // Kiểm tra quyền admin
     if (!this.isAdmin) {
-      alert('You are not authorized to view this page. Admin access required.');
-      this.$router.push('/');
+      Swal.fire({
+        icon: 'error',
+        title: 'Unauthorized Access',
+        text: 'You are not authorized to view this page. Admin access required.',
+        confirmButtonColor: '#A0522D',
+      }).then(() => {
+        this.$router.push('/');
+      });
       return;
     }
 
@@ -134,11 +141,18 @@ export default {
     async fetchCategories() {
       this.isLoadingCategories = true;
       try {
-        const response = await apiClient.get('/categories');
-        this.categories = response.data;
+        await apiClient.get('/categories').then(response => {
+          this.categories = response.data;
+        });
       } catch (err) {
-        console.error('Error fetching categories:', err);
+        console.error('Error fetching categories:', err); // Giữ console.error cho debug
         this.error = err.response?.data?.message || 'Failed to load categories.';
+        Swal.fire({
+          icon: 'error',
+          title: 'Error Loading Categories',
+          text: this.error,
+          confirmButtonColor: '#A0522D',
+        });
       } finally {
         this.isLoadingCategories = false;
       }
@@ -156,8 +170,14 @@ export default {
           category: response.data.category?._id || '', // Lấy _id của category
         };
       } catch (err) {
-        console.error('Error fetching product details:', err);
+        console.error('Error fetching product details:', err); // Giữ console.error cho debug
         this.error = err.response?.data?.message || 'Failed to load product details.';
+        Swal.fire({
+          icon: 'error',
+          title: 'Error Loading Product',
+          text: this.error,
+          confirmButtonColor: '#A0522D',
+        });
       } finally {
         this.isLoading = false;
       }
@@ -183,7 +203,8 @@ export default {
       const formData = new FormData();
       for (const key in this.product) {
         // Bỏ qua trường image nếu không có file mới được chọn và không phải placeholder
-        if (key === 'image' && !this.selectedFile) {
+        if (key === 'image' && !this.selectedFile && this.isEditMode) {
+          // Trong chế độ edit, nếu không chọn file mới, không gửi trường 'image'
           continue; 
         }
         // Nếu là image và có file mới, thì thêm file vào formData
@@ -205,29 +226,52 @@ export default {
       }
 
       try {
-        let response;
         if (this.isEditMode) {
           // Chế độ chỉnh sửa (PUT)
-          response = await apiClient.put(`/products/${this.id}`, formData, {
+          await apiClient.put(`/products/${this.id}`, formData, {
             headers: {
               'Content-Type': 'multipart/form-data', // Quan trọng khi gửi FormData
             },
           });
-          alert('Product updated successfully!');
+          Swal.fire({
+            icon: 'success',
+            title: 'Product Updated!',
+            text: 'Product has been updated successfully.',
+            showConfirmButton: false,
+            timer: 1500,
+            timerProgressBar: true,
+            confirmButtonColor: '#A0522D',
+          }).then(() => {
+            this.$router.push('/admin/products'); // Chuyển hướng về danh sách sản phẩm
+          });
         } else {
           // Chế độ tạo mới (POST)
-          response = await apiClient.post('/products', formData, {
+          await apiClient.post('/products', formData, {
             headers: {
               'Content-Type': 'multipart/form-data', // Quan trọng khi gửi FormData
             },
           });
-          alert('Product created successfully!');
+          Swal.fire({
+            icon: 'success',
+            title: 'Product Created!',
+            text: 'New product has been created successfully.',
+            showConfirmButton: false,
+            timer: 1500,
+            timerProgressBar: true,
+            confirmButtonColor: '#A0522D',
+          }).then(() => {
+            this.$router.push('/admin/products'); // Chuyển hướng về danh sách sản phẩm
+          });
         }
-        console.log('Product saved:', response.data);
-        this.$router.push('/admin/products'); // Chuyển hướng về danh sách sản phẩm
       } catch (err) {
-        console.error('Error saving product:', err);
+        console.error('Error saving product:', err); // Giữ console.error cho debug
         this.error = err.response?.data?.message || 'Failed to save product. Server error.';
+        Swal.fire({
+          icon: 'error',
+          title: 'Save Failed',
+          text: this.error,
+          confirmButtonColor: '#A0522D',
+        });
       } finally {
         this.isSubmitting = false;
       }
