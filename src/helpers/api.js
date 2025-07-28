@@ -2,7 +2,7 @@ import axios from "axios";
 import store from "../store/store.js";
 
 const apiClient = axios.create({
-  baseURL: "https://vietflavor.onrender.com",
+  baseURL: "https://vietflavor.onrender.com/api",
   headers: {
     "Content-Type": "application/json",
   },
