@@ -1,25 +1,20 @@
-<!-- frontend/src/views/CheckoutPage.vue -->
 <template>
   <div class="checkout-page">
     <div class="container">
       <h1>Checkout</h1>
 
-      <!-- Hiển thị Loading Spinner -->
       <div v-if="isCartLoading" class="loading-spinner">Loading cart for checkout...</div>
 
-      <!-- Hiển thị thông báo lỗi nếu có (từ fetchCart ban đầu) -->
       <div v-else-if="getCartError && validCartItems.length === 0" class="error-message">
         {{ getCartError }}
         <router-link to="/menu" class="btn-back-to-menu">Back to Menu</router-link>
       </div>
 
-      <!-- Hiển thị khi giỏ hàng rỗng (hoặc chứa toàn bộ sản phẩm không hợp lệ) -->
       <div v-else-if="validCartItems.length === 0" class="empty-cart-message">
         <p>Your cart is empty or contains no valid items. Please add items before proceeding to checkout.</p>
         <router-link to="/menu" class="btn-primary">Explore Menu</router-link>
       </div>
 
-      <!-- Nội dung trang thanh toán -->
       <div v-else class="checkout-content">
         <div class="shipping-payment-section">
           <h2>Shipping Information</h2>
@@ -40,7 +35,6 @@
               </select>
             </div>
             
-            <!-- TRƯỜNG ĐỊA CHỈ GIAO HÀNG CÓ ĐIỀU KIỆN -->
             <div class="form-group" v-if="shippingInfo.deliveryType === 'shipping'">
               <label for="address">Shipping Address:</label>
               <input 
@@ -62,14 +56,7 @@
                 <input type="radio" id="cash" value="Cash" v-model="paymentMethod" required />
                 <label for="cash">Cash on Delivery (COD)</label>
               </div>
-              <!-- <div class="radio-group">
-                <input type="radio" id="card" value="Card" v-model="paymentMethod" disabled />
-                <label for="card">Credit/Debit Card (Coming Soon)</label>
-              </div> -->
             </div>
-
-            <!-- Đã xóa các div order-message cũ -->
-
             <button type="submit" :disabled="isPlacingOrder" class="btn-place-order">
               <span v-if="isPlacingOrder">Placing Order...</span>
               <span v-else>Place Order</span>
@@ -105,7 +92,7 @@
 <script>
 import apiClient from '@/helpers/api';
 import { mapGetters, mapActions } from 'vuex';
-import Swal from 'sweetalert2'; // Import SweetAlert2
+import Swal from 'sweetalert2'; 
 
 export default {
   name: 'CheckoutPage',
@@ -115,40 +102,30 @@ export default {
         fullName: '',
         address: '',
         phone: '',
-        deliveryType: 'pickup', // Mặc định là pickup
+        deliveryType: 'pickup', 
         note: '',
       },
-      paymentMethod: 'Cash', // Mặc định là Cash on Delivery
+      paymentMethod: 'Cash', 
       isPlacingOrder: false,
-      // Đã xóa: orderSuccessMessage: '',
-      // Đã xóa: orderErrorMessage: '',
     };
   },
   computed: {
-    // Ánh xạ các getters từ user và cart modules
     ...mapGetters('user', ['isLoggedIn', 'getUserInfo']),
     ...mapGetters('cart', ['getCartItems', 'isCartLoading', 'getCartError']),
 
-    // Computed property to filter out invalid cart items
     validCartItems() {
       return this.getCartItems.filter(item => item.product !== null);
     },
-
-    // Calculate subtotal based on valid items
     calculatedSubtotal() {
       return this.validCartItems.reduce((total, item) => total + item.price * item.quantity, 0);
     },
-
-    // Tính toán phí vận chuyển dựa trên deliveryType
     calculatedShippingPrice() {
-      return this.shippingInfo.deliveryType === 'shipping' ? 5.00 : 0.00; // Phí ship cố định 5$
+      return this.shippingInfo.deliveryType === 'shipping' ? 5.00 : 0.00; 
     },
-    // Tính toán thuế (10% của tổng giá sản phẩm)
     calculatedTaxPrice() {
       const subtotal = parseFloat(this.calculatedSubtotal || 0); 
       return subtotal * 0.1; 
     },
-    // Tính toán tổng cộng (Subtotal + Shipping + Tax)
     calculatedGrandTotal() {
       const subtotal = parseFloat(this.calculatedSubtotal || 0);
       const shipping = this.calculatedShippingPrice;
@@ -157,7 +134,6 @@ export default {
     }
   },
   async created() {
-    // Kiểm tra đăng nhập
     if (!this.isLoggedIn) {
       Swal.fire({
         icon: 'info',
@@ -169,11 +145,8 @@ export default {
       });
       return;
     }
-
-    // Fetch giỏ hàng để đảm bảo dữ liệu mới nhất
     await this.fetchCart();
 
-    // Kiểm tra giỏ hàng rỗng SAU KHI fetch và lọc
     if (this.validCartItems.length === 0) { 
       Swal.fire({
         icon: 'info',
@@ -186,7 +159,6 @@ export default {
       return;
     }
 
-    // Điền trước thông tin người dùng nếu có
     if (this.getUserInfo) {
       this.shippingInfo.fullName = this.getUserInfo.fullName || ''; 
       this.shippingInfo.address = this.getUserInfo.address || ''; 
@@ -194,10 +166,8 @@ export default {
     }
   },
   methods: {
-    // Ánh xạ các actions từ cart module
     ...mapActions('cart', ['fetchCart', 'clearCart']),
 
-    // Hàm để lấy URL hình ảnh đầy đủ từ backend (tái sử dụng)
     getBackendImageUrl(imagePath) {
       const backendBaseUrl = apiClient.defaults.baseURL.replace('/api', '');
       if (!imagePath || imagePath === '/uploads/placeholder.jpg') {
@@ -208,12 +178,8 @@ export default {
       }
       return `${backendBaseUrl}${imagePath.startsWith('/') ? '' : '/'}${imagePath}`;
     },
-
-    // Xử lý đặt hàng
     async handlePlaceOrder() {
       this.isPlacingOrder = true;
-
-      // Thêm kiểm tra validation cho địa chỉ nếu deliveryType là 'shipping'
       if (this.shippingInfo.deliveryType === 'shipping' && !this.shippingInfo.address) {
         Swal.fire({
           icon: 'error',
@@ -225,7 +191,6 @@ export default {
         return;
       }
 
-      // Đảm bảo có ít nhất một sản phẩm hợp lệ trong giỏ hàng để đặt
       if (this.validCartItems.length === 0) {
         Swal.fire({
           icon: 'warning',
@@ -241,7 +206,6 @@ export default {
 
       try {
         const orderData = {
-          // Sử dụng validCartItems để đảm bảo chỉ gửi các sản phẩm hợp lệ
           orderItem: this.validCartItems.map(item => ({
             product: item.product._id, 
             name: item.name,
@@ -258,10 +222,7 @@ export default {
           totalPrice: parseFloat(this.calculatedGrandTotal.toFixed(2)), 
           note: this.shippingInfo.note,
         };
-
         const response = await apiClient.post('/orders', orderData);
-        
-        // Hiển thị thông báo thành công bằng SweetAlert2
         Swal.fire({
           icon: 'success',
           title: 'Order Placed Successfully!',
@@ -271,12 +232,10 @@ export default {
           timerProgressBar: true,
           confirmButtonColor: '#A0522D',
         }).then(async () => {
-          // Bọc clearCart trong try...catch riêng và chỉ hiển thị cảnh báo nếu lỗi KHÔNG phải là 404
           try {
             await this.clearCart(); 
           } catch (clearCartError) {
             console.error('Error clearing cart after successful order:', clearCartError);
-            // Chỉ hiển thị cảnh báo nếu lỗi KHÔNG phải là 404 (giỏ hàng không tìm thấy)
             if (clearCartError.response && clearCartError.response.status !== 404) {
               Swal.fire({
                 toast: true,
@@ -288,12 +247,10 @@ export default {
               });
             }
           }
-          this.$router.push(`/orders/myorders`); // Chuyển hướng đến trang đơn hàng của tôi
+          this.$router.push(`/orders/myorders`); 
         });
-
       } catch (err) {
         console.error('Error placing order:', err);
-        // Hiển thị thông báo lỗi bằng SweetAlert2
         Swal.fire({
           icon: 'error',
           title: 'Order Failed!',
@@ -309,7 +266,6 @@ export default {
 </script>
 
 <style scoped>
-/* CSS cho trang thanh toán */
 .checkout-page {
   background-color: var(--bg-light);
   padding: 40px 20px;
@@ -413,7 +369,7 @@ export default {
   border: 1px solid var(--border-color);
   border-radius: 8px;
   font-size: 1em;
-  box-sizing: border-box; /* Đảm bảo padding không làm tăng width */
+  box-sizing: border-box; 
 }
 
 .shipping-form textarea {
@@ -421,12 +377,12 @@ export default {
 }
 
 .delivery-select {
-  appearance: none; /* Loại bỏ style mặc định của select */
+  appearance: none; 
   background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23000000%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-6.5%200-12.3%203.2-16.1%208.1-3.7%204.9-4.9%2011-3.6%2017.3l133.3%20170.9c5.1%206.5%2012.8%2010.1%2021%2010.1s15.9-3.6%2021-10.1l133.3-170.9c1.3-6.3.1-12.4-3.6-17.3z%22%2F%3E%3C%2Fsvg%3E');
   background-repeat: no-repeat;
   background-position: right 10px top 50%;
   background-size: 12px;
-  padding-right: 30px; /* Tạo không gian cho icon */
+  padding-right: 30px; 
 }
 
 .payment-methods {
@@ -442,7 +398,7 @@ export default {
 
 .payment-methods input[type="radio"] {
   margin-right: 10px;
-  transform: scale(1.2); /* Phóng to radio button */
+  transform: scale(1.2); 
 }
 
 .payment-methods label {
@@ -475,8 +431,6 @@ export default {
   opacity: 0.8;
 }
 
-/* Đã xóa CSS cho .order-message vì không còn sử dụng */
-
 .order-summary-section {
   flex: 1;
   min-width: 300px;
@@ -496,10 +450,10 @@ export default {
 }
 
 .order-items-summary {
-  max-height: 300px; /* Giới hạn chiều cao và thêm scroll */
+  max-height: 300px; 
   overflow-y: auto;
   margin-bottom: 20px;
-  padding-right: 10px; /* Để tránh scrollbar che nội dung */
+  padding-right: 10px; 
 }
 
 .summary-item {
@@ -571,7 +525,6 @@ export default {
   color: var(--accent-color) !important;
 }
 
-/* Responsive adjustments */
 @media (max-width: 992px) {
   .shipping-payment-section, .order-summary-section {
     min-width: unset;

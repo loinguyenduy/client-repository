@@ -1,4 +1,3 @@
-// frontend/src/store.js
 
 import { createStore } from "vuex";
 

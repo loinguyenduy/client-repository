@@ -156,36 +156,18 @@ const router = createRouter({
   routes,
 });
 
-// router.beforeEach((to, from, next) => {
-//   const isLoggedIn = store.getters["user/isLoggedIn"];
-//   const userRole = store.getters["user/userRole"];
-
-//   if (to.meta.requiresAuth && !isLoggedIn) {
-//     next({ name: "login", query: { redirect: to.fullPath } });
-//   } else if (to.meta.requiresAdmin && userRole !== "admin") {
-//     alert("Not authorized! Access denied.");
-//     next({ name: "home" });
-//   } else {
-//     next();
-//   }
-// });
 router.beforeEach((to, from, next) => {
   const isLoggedIn = store.getters["user/isLoggedIn"];
-  const isAdmin = store.getters["user/isAdmin"]; // <-- Lấy getter isAdmin
+  const isAdmin = store.getters["user/isAdmin"]; 
 
-  // Logic chuyển hướng cho Admin
   if (to.path === '/' && isLoggedIn && isAdmin) {
-    // Nếu là admin và đang cố gắng truy cập trang chủ, chuyển hướng đến admin dashboard
     next({ name: 'adminDashboard' });
   } else if (to.meta.requiresAuth && !isLoggedIn) {
-    // Nếu yêu cầu xác thực nhưng chưa đăng nhập
     next({ name: "login", query: { redirect: to.fullPath } });
-  } else if (to.meta.requiresAdmin && !isAdmin) { // <-- Sửa điều kiện này
-    // Nếu yêu cầu quyền admin nhưng không phải admin
+  } else if (to.meta.requiresAdmin && !isAdmin) { 
     alert("Not authorized! Access denied.");
     next({ name: "home" });
   } else {
-    // Cho phép truy cập
     next();
   }
 });

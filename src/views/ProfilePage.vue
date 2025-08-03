@@ -1,14 +1,8 @@
-<!-- frontend/src/views/ProfilePage.vue -->
 <template>
   <div class="profile-page">
     <div class="profile-container">
       <h2>User Profile</h2>
-      
-      <!-- Đã loại bỏ phần hiển thị thông báo lỗi hoặc thành công thông thường, 
-           vì SweetAlert2 sẽ xử lý điều này -->
-
-      <!-- Phần hiển thị thông tin hồ sơ -->
-      <div v-if="!isEditingProfile" class="profile-display">
+       <div v-if="!isEditingProfile" class="profile-display">
         <p><strong>Full Name:</strong> {{ userInfo?.fullName }}</p>
         <p><strong>Email:</strong> {{ userInfo?.email }}</p>
         <p><strong>Phone Number:</strong> {{ userInfo?.phoneNumber || 'N/A' }}</p>
@@ -16,7 +10,6 @@
         <button @click="startEditingProfile" class="btn-edit-profile">Edit Profile</button>
       </div>
 
-      <!-- Phần chỉnh sửa thông tin hồ sơ -->
       <form v-else @submit.prevent="updateUserProfile" class="profile-form">
         <h3>Edit Profile Information</h3>
         <div class="form-group">
@@ -44,7 +37,6 @@
 
       <hr class="section-divider" />
 
-      <!-- Phần đổi mật khẩu -->
       <h3>Change Password</h3>
       <form @submit.prevent="changePassword" class="password-form">
         <div class="form-group">
@@ -70,13 +62,12 @@
 
 <script>
 import { mapGetters, mapActions } from 'vuex';
-import Swal from 'sweetalert2'; // Import SweetAlert2
-
+import Swal from 'sweetalert2'; 
 export default {
   name: 'ProfilePage',
   data() {
     return {
-      isEditingProfile: false, // Trạng thái chỉnh sửa thông tin hồ sơ
+      isEditingProfile: false, 
       editFullName: '',
       editEmail: '',
       editPhoneNumber: '',
@@ -86,23 +77,18 @@ export default {
       newPassword: '',
       confirmNewPassword: '',
 
-      isLoadingProfileUpdate: false, // Trạng thái loading khi cập nhật profile
-      isLoadingPasswordChange: false, // Trạng thái loading khi đổi mật khẩu
-      // Đã xóa: message: '',
-      // Đã xóa: messageType: ''
+      isLoadingProfileUpdate: false, 
+      isLoadingPasswordChange: false, 
     };
   },
   computed: {
-    // Ánh xạ các getters từ module 'user' của Vuex store
     ...mapGetters('user', ['getUserInfo']),
     
-    // Lấy thông tin người dùng từ store
     userInfo() {
       return this.getUserInfo;
     }
   },
   watch: {
-    // Theo dõi thay đổi của userInfo để cập nhật form chỉnh sửa khi dữ liệu được fetch
     userInfo: {
       handler(newVal) {
         if (newVal) {
@@ -112,12 +98,10 @@ export default {
           this.editAddress = newVal.address || '';
         }
       },
-      immediate: true // Chạy handler ngay lập tức khi component được tạo
+      immediate: true 
     }
   },
   async created() {
-    // Khi component được tạo, cố gắng fetch thông tin profile mới nhất từ backend
-    // Điều này đảm bảo dữ liệu hiển thị luôn được đồng bộ
     this.isLoadingProfileUpdate = true;
     try {
       await this.fetchUserProfile();
@@ -133,10 +117,7 @@ export default {
     }
   },
   methods: {
-    // Ánh xạ các actions từ module 'user' của Vuex store
-    ...mapActions('user', ['fetchUserProfile', 'updateProfile']), // Giả định updateProfile có thể xử lý cả thông tin và mật khẩu
-
-    // Bắt đầu chỉnh sửa hồ sơ: sao chép thông tin hiện tại vào form
+    ...mapActions('user', ['fetchUserProfile', 'updateProfile']), 
     startEditingProfile() {
       this.isEditingProfile = true;
       this.editFullName = this.userInfo.fullName;
@@ -145,10 +126,8 @@ export default {
       this.editAddress = this.userInfo.address;
     },
 
-    // Hủy chỉnh sửa hồ sơ
     cancelEditingProfile() {
       this.isEditingProfile = false;
-      // Reset form chỉnh sửa về trạng thái ban đầu của userInfo
       if (this.userInfo) {
         this.editFullName = this.userInfo.fullName || '';
         this.editEmail = this.userInfo.email || '';
@@ -157,7 +136,6 @@ export default {
       }
     },
 
-    // Gửi yêu cầu cập nhật thông tin hồ sơ
     async updateUserProfile() {
       this.isLoadingProfileUpdate = true;
 
@@ -168,8 +146,7 @@ export default {
           phoneNumber: this.editPhoneNumber,
           address: this.editAddress,
         };
-        await this.updateProfile(updatedData); // Gọi action cập nhật profile
-        
+        await this.updateProfile(updatedData); 
         Swal.fire({
           icon: 'success',
           title: 'Profile Updated!',
@@ -179,7 +156,7 @@ export default {
           timerProgressBar: true,
           confirmButtonColor: '#A0522D',
         }).then(() => {
-          this.isEditingProfile = false; // Tắt chế độ chỉnh sửa sau khi cập nhật
+          this.isEditingProfile = false; 
         });
 
       } catch (err) {
@@ -195,7 +172,6 @@ export default {
       }
     },
 
-    // Gửi yêu cầu đổi mật khẩu
     async changePassword() {
       this.isLoadingPasswordChange = true;
 
@@ -211,17 +187,10 @@ export default {
       }
 
       try {
-        // Giả định backend có API để đổi mật khẩu và action Vuex tương ứng
-        // Nếu API `updateProfile` của bạn có thể xử lý đổi mật khẩu, hãy truyền dữ liệu vào đó.
-        // Nếu không, bạn cần một action Vuex và API backend riêng cho việc đổi mật khẩu.
-        // Ví dụ:
         const passwordUpdateData = {
             currentPassword: this.currentPassword,
             newPassword: this.newPassword,
         };
-        // Gọi action Vuex để đổi mật khẩu.
-        // Đây là một giả định, bạn cần đảm bảo action 'updateProfile' hoặc một action khác
-        // trong Vuex store của bạn có thể xử lý việc đổi mật khẩu.
         await this.updateProfile(passwordUpdateData); 
 
         Swal.fire({
@@ -233,8 +202,6 @@ export default {
           timerProgressBar: true,
           confirmButtonColor: '#A0522D',
         });
-
-        // Xóa các trường mật khẩu sau khi đổi thành công
         this.currentPassword = '';
         this.newPassword = '';
         this.confirmNewPassword = '';
@@ -255,11 +222,10 @@ export default {
 </script>
 
 <style scoped>
-/* CSS cho trang hồ sơ */
 .profile-page {
   display: flex;
   justify-content: center;
-  align-items: flex-start; /* Căn trên để nội dung không bị dồn giữa nếu ít */
+  align-items: flex-start; 
   min-height: calc(100vh - 150px);
   background-color: var(--bg-light);
   padding: 40px 20px;
@@ -271,7 +237,7 @@ export default {
   border-radius: 10px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
   width: 100%;
-  max-width: 600px; /* Tăng chiều rộng tối đa */
+  max-width: 600px; 
   text-align: center;
 }
 
@@ -290,9 +256,6 @@ export default {
   font-family: var(--font-family-heading);
 }
 
-/* Đã xóa CSS cho .message */
-
-/* Phần hiển thị thông tin */
 .profile-display {
   text-align: left;
   margin-bottom: 30px;
@@ -324,7 +287,6 @@ export default {
   background-color: darken(var(--primary-color), 10%);
 }
 
-/* Form chỉnh sửa profile và đổi mật khẩu */
 .profile-form, .password-form {
   text-align: left;
   margin-bottom: 30px;
@@ -385,7 +347,7 @@ export default {
 }
 
 .btn-cancel-edit {
-  background-color: #6c757d; /* Màu xám */
+  background-color: #6c757d; 
   color: #fff;
   padding: 12px 20px;
   border: none;

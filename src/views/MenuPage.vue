@@ -1,10 +1,8 @@
-<!-- frontend/src/views/MenuPage.vue -->
 <template>
   <div class="menu-page">
     <div class="container">
       <h1>Our Delicious Menu</h1>
 
-      <!-- Search & Filter Controls -->
       <div class="controls-bar">
         <div class="search-input-group">
           <input type="text" v-model.trim="searchKeyword" @keyup.enter="applyFilters" placeholder="Search for dishes..." class="search-input" />
@@ -13,32 +11,27 @@
           </button>
         </div>
 
-        <div class="filter-group"> <!-- Đổi tên từ filter-sort-group thành filter-group -->
+        <div class="filter-group"> 
           <select v-model="selectedCategory" @change="applyFilters" class="filter-select">
             <option value="">All Categories</option>
             <option v-for="category in categories" :key="category._id" :value="category.name">
               {{ category.name }}
             </option>
           </select>
-          <!-- Đã xóa phần tử select cho sort ở đây -->
         </div>
       </div>
 
-      <!-- Display Loading Spinner -->
       <div v-if="isLoadingProducts" class="loading-spinner">Loading menu...</div>
 
-      <!-- Display Error Message if any -->
       <div v-else-if="error" class="error-message">
         {{ error }}
       </div>
 
-      <!-- Display when no products are found -->
       <div v-else-if="products.length === 0" class="no-products-message">
         <p>No products found matching your criteria.</p>
         <button @click="resetFilters" class="btn-primary">Reset Filters</button>
       </div>
 
-      <!-- Product Grid -->
       <div v-else class="product-grid">
         <div v-for="product in products" :key="product._id" class="product-card">
           <img :src="getBackendImageUrl(product.image)" :alt="product.name" class="product-image" />
@@ -56,7 +49,6 @@
         </div>
       </div>
 
-      <!-- Pagination Controls -->
       <div v-if="totalPages > 1" class="pagination-controls">
         <button
           @click="changePage(currentPage - 1)"
@@ -83,8 +75,7 @@
 <script>
 import apiClient from '@/helpers/api';
 import { mapGetters, mapActions } from 'vuex';
-import Swal from 'sweetalert2'; // Import SweetAlert2
-
+import Swal from 'sweetalert2'; 
 export default {
   name: 'MenuPage',
   data() {
@@ -95,11 +86,10 @@ export default {
       error: null,
       searchKeyword: '',
       selectedCategory: '',
-      // Đã xóa selectedSort ở đây
       currentPage: 1,
       totalPages: 1,
       limit: 10,
-      isAddingToCartMap: {}, // Object to track loading state for each Add to Cart button
+      isAddingToCartMap: {}, 
     };
   },
   computed: {
@@ -151,28 +141,6 @@ export default {
           params.category = this.selectedCategory;
         }
         
-        // Đã xóa toàn bộ logic xử lý selectedSort ở đây
-        // if (this.selectedSort) {
-        //   switch (this.selectedSort) {
-        //     case 'price_asc':
-        //       params.sort = 'price';
-        //       params.order = 'asc';
-        //       break;
-        //     case 'price_desc':
-        //       params.sort = 'price';
-        //       params.order = 'desc';
-        //       break;
-        //     case 'name_asc':
-        //       params.sort = 'name';
-        //       params.order = 'asc';
-        //       break;
-        //     case 'name_desc':
-        //       params.sort = 'name';
-        //       params.order = 'desc';
-        //       break;
-        //   }
-        // }
-
         const response = await apiClient.get('/products', { params });
         this.products = response.data.products;
         this.currentPage = response.data.page;
@@ -201,13 +169,11 @@ export default {
     resetFilters() {
       this.searchKeyword = '';
       this.selectedCategory = '';
-      // Đã xóa this.selectedSort = ''; ở đây
       this.currentPage = 1;
       this.fetchProducts();
     },
 
     async handleAddToCart(product) {
-      // Use direct assignment for Vue 3 reactivity
       this.isAddingToCartMap[product._id] = true;
 
       if (!this.isLoggedIn) {
@@ -220,9 +186,8 @@ export default {
           timer: 1500,
           timerProgressBar: true,
         }).then(() => {
-          // Redirect to login page, passing the current full path as a redirect query parameter
           this.$router.push({ path: "/login", query: { redirect: this.$route.fullPath } });
-          this.isAddingToCartMap[product._id] = false; // Reset loading state
+          this.isAddingToCartMap[product._id] = false; 
         });
         return;
       }
@@ -258,7 +223,6 @@ export default {
 </script>
 
 <style scoped>
-/* CSS cho trang Menu */
 .menu-page {
   background-color: var(--bg-light);
   padding: 40px 20px;
@@ -285,7 +249,6 @@ export default {
   font-family: var(--font-family-heading);
 }
 
-/* Controls Bar */
 .controls-bar {
   display: flex;
   flex-wrap: wrap;
@@ -333,24 +296,24 @@ export default {
   background-color: darken(var(--primary-color), 10%);
 }
 
-.filter-group { /* Đổi tên class */
+.filter-group { 
   display: flex;
   gap: 15px;
   flex-wrap: wrap;
 }
 
-.filter-select { /* Chỉ còn filter-select */
+.filter-select { 
   padding: 12px 15px;
   border: 1px solid var(--border-color);
   border-radius: 8px;
   font-size: 1em;
   outline: none;
-  appearance: none; /* Remove default arrow */
+  appearance: none; 
   background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23A0522D%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-6.5%200-12.3%203.2-16.1%208.1-3.7%204.9-4.9%2011-3.6%2017.3l133.3%20170.9c5.1%206.5%2012.8%2010.1%2021%2010.1s15.9-3.6%2021-10.1l133.3-170.9c1.3-6.3.1-12.4-3.6-17.3z%22%2F%3E%3C%2Fsvg%3E');
   background-repeat: no-repeat;
   background-position: right 15px center;
   background-size: 1.2em;
-  padding-right: 40px; /* Space for the icon */
+  padding-right: 40px; 
   cursor: pointer;
 }
 
@@ -386,7 +349,6 @@ export default {
   background-color: darken(var(--primary-color), 10%);
 }
 
-/* Product Grid */
 .product-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -410,8 +372,8 @@ export default {
 
 .product-image {
   width: 100%;
-  height: 180px; /* Fixed height for consistency */
-  object-fit: cover; /* Crop image to fit */
+  height: 180px; 
+  object-fit: cover; 
   border-radius: 8px;
   margin-bottom: 15px;
 }
@@ -421,9 +383,9 @@ export default {
   color: var(--text-color);
   margin-bottom: 5px;
   font-family: var(--font-family-heading);
-  white-space: nowrap; /* Prevent text wrapping */
-  overflow: hidden; /* Hide overflowed text */
-  text-overflow: ellipsis; /* Add ellipsis for overflow */
+  white-space: nowrap; 
+  overflow: hidden; 
+  text-overflow: ellipsis;
 }
 
 .product-category {
@@ -443,7 +405,7 @@ export default {
   display: flex;
   justify-content: space-between;
   gap: 10px;
-  margin-top: auto; /* Push to the bottom of the card */
+  margin-top: auto; 
 }
 
 .btn-view-details {
@@ -455,7 +417,7 @@ export default {
   text-decoration: none;
   font-weight: bold;
   transition: background-color 0.3s ease;
-  flex-grow: 1; /* Allow button to grow */
+  flex-grow: 1; 
   text-align: center;
 }
 
@@ -473,7 +435,7 @@ export default {
   font-weight: bold;
   cursor: pointer;
   transition: background-color 0.3s ease;
-  flex-grow: 1; /* Allow button to grow */
+  flex-grow: 1; 
 }
 
 .btn-add-to-cart:hover:not(:disabled) {
@@ -486,7 +448,6 @@ export default {
   opacity: 0.7;
 }
 
-/* Pagination Controls */
 .pagination-controls {
   display: flex;
   justify-content: center;
@@ -530,7 +491,6 @@ export default {
   margin-top: 40px;
 }
 
-/* Responsive adjustments */
 @media (max-width: 992px) {
   .controls-bar {
     flex-direction: column;
@@ -540,7 +500,7 @@ export default {
     width: 100%;
     max-width: 100%;
   }
-  .filter-group { /* Đổi tên class */
+  .filter-group { 
     width: 100%;
     justify-content: center;
   }
@@ -548,7 +508,7 @@ export default {
 
 @media (max-width: 768px) {
   .product-grid {
-    grid-template-columns: 1fr; /* One column on small screens */
+    grid-template-columns: 1fr; 
   }
 }
 </style>

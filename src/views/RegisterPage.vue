@@ -1,11 +1,7 @@
-<!-- frontend/src/views/RegisterPage.vue -->
 <template>
   <div class="register-page">
     <div class="register-container">
       <h2>Register Account</h2>
-      <!-- Đã loại bỏ phần hiển thị thông báo lỗi/thành công thông thường, 
-        vì SweetAlert2 sẽ xử lý điều này -->
-
       <form @submit.prevent="submitRegister" class="register-form">
         <div class="form-group">
           <label for="fullName">Full Name</label>
@@ -45,13 +41,11 @@
           </div>
         </div>
 
-        <!-- Thêm trường Phone Number -->
         <div class="form-group">
           <label for="phoneNumber">Phone Number (Optional)</label>
           <input type="tel" id="phoneNumber" v-model="phoneNumber" placeholder="Enter your phone number" />
         </div>
 
-        <!-- Thêm trường Address -->
         <div class="form-group">
           <label for="address">Address (Optional)</label>
           <input type="text" id="address" v-model="address" placeholder="Enter your address" />
@@ -72,7 +66,7 @@
 
 <script>
 import { mapActions } from 'vuex';
-import Swal from 'sweetalert2'; // Import SweetAlert2
+import Swal from 'sweetalert2'; 
 
 export default {
   name: 'RegisterPage',
@@ -85,9 +79,8 @@ export default {
       phoneNumber: '',
       address: '',
       isLoading: false,
-      passwordVisible: false, // for password field
-      confirmPasswordVisible: false, // for confirm password field
-      // Đã loại bỏ 'message' và 'messageType' vì SweetAlert2 sẽ xử lý
+      passwordVisible: false,
+      confirmPasswordVisible: false, 
     };
   },
   computed: {
@@ -108,9 +101,8 @@ export default {
       this.confirmPasswordVisible = !this.confirmPasswordVisible;
     },
     async submitRegister() {
-      this.isLoading = true; // Bắt đầu loading
+      this.isLoading = true; 
 
-      // Kiểm tra mật khẩu khớp nhau
       if (this.password !== this.confirmPassword) {
         Swal.fire({
           icon: 'error',
@@ -131,21 +123,18 @@ export default {
           address: this.address,
         });
 
-        // Hiển thị thông báo thành công bằng SweetAlert2
         Swal.fire({
           icon: 'success',
           title: 'Registration Successful!',
           text: 'Your account has been created. Redirecting to login page...',
-          showConfirmButton: false, // Không hiển thị nút OK ngay lập tức
-          timer: 2000, // Tự động đóng sau 2 giây
+          showConfirmButton: false, 
+          timer: 2000,
           timerProgressBar: true,
         }).then(() => {
-          // Chuyển hướng đến trang đăng nhập sau khi alert đóng
           this.$router.push('/login');
         });
 
       } catch (err) {
-        // Hiển thị thông báo lỗi bằng SweetAlert2
         Swal.fire({
           icon: 'error',
           title: 'Registration Failed',
@@ -153,7 +142,7 @@ export default {
           confirmButtonColor: '#A0522D',
         });
       } finally {
-        this.isLoading = false; // Kết thúc loading
+        this.isLoading = false; 
       }
     }
   }
@@ -161,13 +150,12 @@ export default {
 </script>
 
 <style scoped>
-/* CSS cho trang đăng ký */
 .register-page {
   display: flex;
   justify-content: center;
   align-items: center;
-  min-height: calc(100vh - 150px); /* Đảm bảo trang chiếm đủ chiều cao còn lại */
-  background-color: var(--bg-light); /* Sử dụng biến màu nền từ App.vue */
+  min-height: calc(100vh - 150px); 
+  background-color: var(--bg-light); 
   padding: 20px;
 }
 
@@ -203,7 +191,7 @@ export default {
 .form-group input[type="text"],
 .form-group input[type="email"],
 .form-group .password-input-wrapper input,
-.form-group input[type="tel"] { /* <-- Thêm type="tel" vào đây */
+.form-group input[type="tel"] { 
   width: 100%;
   padding: 12px 15px;
   border: 1px solid var(--border-color);
@@ -213,12 +201,12 @@ export default {
 }
 
 .password-input-wrapper input {
-  padding-right: 70px; /* Thêm khoảng trống để chữ không bị che bởi nút */
+  padding-right: 70px;
 }
 
 .form-group input:focus {
   border-color: var(--primary-color);
-  box-shadow: 0 0 0 3px rgba(160, 82, 45, 0.2); /* Sử dụng giá trị RGB trực tiếp nếu không có biến */
+  box-shadow: 0 0 0 3px rgba(160, 82, 45, 0.2); 
   outline: none;
 }
 
@@ -262,7 +250,6 @@ export default {
   text-decoration: underline;
 }
 
-/* Styles for the password visibility toggle button */
 .password-input-wrapper {
   position: relative;
 }
@@ -281,5 +268,4 @@ export default {
   font-size: 0.9em;
 }
 
-/* Đã loại bỏ CSS cho .message và .message.error/.success vì SweetAlert2 sẽ xử lý */
 </style>

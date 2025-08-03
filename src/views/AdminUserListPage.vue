@@ -1,10 +1,8 @@
-<!-- frontend/src/views/AdminUserListPage.vue -->
 <template>
   <div class="admin-user-list-page">
     <div class="container">
       <h1>User Management</h1>
 
-      <!-- Hiển thị thông báo loading hoặc lỗi -->
       <div v-if="isLoading" class="loading-spinner">Loading users...</div>
       <div v-else-if="error" class="error-message">
         {{ error }}
@@ -14,7 +12,6 @@
         No users found in the system.
       </div>
 
-      <!-- Bảng danh sách người dùng -->
       <div v-else class="users-table-container">
         <table class="users-table">
           <thead>
@@ -64,7 +61,7 @@
 <script>
 import apiClient from '@/helpers/api';
 import { mapGetters } from 'vuex';
-import Swal from 'sweetalert2'; // Import SweetAlert2
+import Swal from 'sweetalert2'; 
 
 export default {
   name: 'AdminUserListPage',
@@ -78,11 +75,10 @@ export default {
   computed: {
     ...mapGetters('user', ['isAdmin', 'getUserInfo']),
     currentAdminId() {
-      return this.getUserInfo?._id || null; // Lấy ID của admin hiện tại
+      return this.getUserInfo?._id || null; 
     }
   },
   async created() {
-    // Kiểm tra quyền admin
     if (!this.isAdmin) {
       Swal.fire({
         icon: 'error',
@@ -97,7 +93,6 @@ export default {
     await this.fetchAllUsers();
   },
   methods: {
-    // Lấy tất cả người dùng từ backend
     async fetchAllUsers() {
       this.isLoading = true;
       this.error = null;
@@ -105,7 +100,7 @@ export default {
         const response = await apiClient.get('/admin/users');
         this.users = response.data;
       } catch (err) {
-        console.error('Error fetching users:', err); // Giữ console.error cho debug
+        console.error('Error fetching users:', err); 
         this.error = err.response?.data?.message || 'Failed to load users. Server error.';
         this.users = [];
         Swal.fire({
@@ -119,9 +114,7 @@ export default {
       }
     },
 
-    // Cập nhật vai trò người dùng
     async updateUserRole(userId, newRole) {
-      // Ngăn admin tự hạ quyền của mình
       if (userId === this.currentAdminId && newRole !== 'admin') {
         Swal.fire({
           icon: 'warning',
@@ -129,15 +122,14 @@ export default {
           text: 'You cannot downgrade your own role!',
           confirmButtonColor: '#A0522D',
         });
-        // Fetch lại để khôi phục trạng thái cũ trên UI
         await this.fetchAllUsers(); 
         return;
       }
 
-      this.isLoading = true; // Có thể hiển thị loading cho từng dòng
+      this.isLoading = true; 
       this.error = null;
       try {
-        await apiClient.put(`/admin/users/${userId}`, { role: newRole }); // Gọi API updateUser
+        await apiClient.put(`/admin/users/${userId}`, { role: newRole }); 
         Swal.fire({
           icon: 'success',
           title: 'Role Updated!',
@@ -147,9 +139,9 @@ export default {
           timerProgressBar: true,
           confirmButtonColor: '#A0522D',
         });
-        await this.fetchAllUsers(); // Fetch lại danh sách sau khi cập nhật
+        await this.fetchAllUsers(); 
       } catch (err) {
-        console.error(`Error updating user role ${userId}:`, err); // Giữ console.error cho debug
+        console.error(`Error updating user role ${userId}:`, err); 
         this.error = err.response?.data?.message || 'Failed to update user role. Server error.';
         Swal.fire({
           icon: 'error',
@@ -157,16 +149,13 @@ export default {
           text: this.error,
           confirmButtonColor: '#A0522D',
         });
-        // Nếu lỗi, fetch lại để khôi phục trạng thái cũ trên UI
         await this.fetchAllUsers(); 
       } finally {
         this.isLoading = false;
       }
     },
 
-    // Xác nhận xóa người dùng bằng SweetAlert2
     async confirmDelete(userId) {
-      // Ngăn admin tự xóa tài khoản của mình
       if (userId === this.currentAdminId) {
         Swal.fire({
           icon: 'warning',
@@ -182,8 +171,8 @@ export default {
         text: 'You are about to delete this user. This action cannot be undone!',
         icon: 'warning',
         showCancelButton: true,
-        confirmButtonColor: '#dc3545', // Red for delete
-        cancelButtonColor: '#6c757d', // Grey for cancel
+        confirmButtonColor: '#dc3545', 
+        cancelButtonColor: '#6c757d', 
         confirmButtonText: 'Yes, delete it!',
         cancelButtonText: 'No, cancel!',
       });
@@ -193,7 +182,6 @@ export default {
       }
     },
 
-    // Xóa người dùng
     async deleteUser(userId) {
       this.isLoading = true; 
       this.error = null;
@@ -208,9 +196,9 @@ export default {
           timerProgressBar: true,
           confirmButtonColor: '#A0522D',
         });
-        await this.fetchAllUsers(); // Fetch lại danh sách sau khi xóa
+        await this.fetchAllUsers(); 
       } catch (err) {
-        console.error(`Error deleting user ${userId}:`, err); // Giữ console.error cho debug
+        console.error(`Error deleting user ${userId}:`, err); 
         this.error = err.response?.data?.message || 'Failed to delete user. Server error.';
         Swal.fire({
           icon: 'error',
@@ -223,7 +211,6 @@ export default {
       }
     },
 
-    // Hàm định dạng ngày tháng
     formatDate(dateString) {
       const options = { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' };
       return new Date(dateString).toLocaleDateString(undefined, options);
@@ -233,7 +220,6 @@ export default {
 </script>
 
 <style scoped>
-/* CSS for Admin User List Page */
 .admin-user-list-page {
   background-color: var(--bg-light);
   padding: 40px 20px;
@@ -326,7 +312,7 @@ export default {
   outline: none;
   width: 100px;
   text-transform: capitalize;
-  appearance: none; /* Remove default arrow */
+  appearance: none; 
   background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%236c757d%22%20d%3D%22M287%2C197.3L159.2%2C69.5c-3.2-3.2-8.3-3.2-11.5%2C0L5.4%2C197.3c-3.2%2C3.2-3.2%2C8.3%2C0%2C11.5l11.5%2C11.5c3.2%2C3.2%2C8.3%2C3.2%2C11.5%2C0l118.8-118.8l118.8%2C118.8c3.2%2C3.2%2C8.3%2C3.2%2C11.5%2C0l11.5-11.5C290.2%2C205.6%2C290.2%2C200.5%2C287%2C197.3z%22%2F%3E%3C%2Fsvg%3E');
   background-repeat: no-repeat;
   background-position: right 8px center;
@@ -334,14 +320,14 @@ export default {
 }
 
 .role-select.admin {
-  background-color: #fff3cd; /* Light yellow */
-  color: #856404; /* Dark yellow */
+  background-color: #fff3cd; 
+  color: #856404; 
   border-color: #ffc107;
 }
 
 .role-select.user {
-  background-color: #e2f0fb; /* Light blue */
-  color: #004085; /* Dark blue */
+  background-color: #e2f0fb; 
+  color: #004085; 
   border-color: #007bff;
 }
 
@@ -406,7 +392,6 @@ export default {
   background-color: darken(#6c757d, 10%);
 }
 
-/* Responsive adjustments */
 @media (max-width: 768px) {
   .users-table th, .users-table td {
     padding: 8px 10px;

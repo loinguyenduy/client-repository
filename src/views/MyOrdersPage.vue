@@ -1,13 +1,10 @@
-<!-- frontend/src/views/MyOrdersPage.vue -->
 <template>
   <div class="my-orders-page">
     <div class="container">
       <h1>My Orders</h1>
 
-      <!-- Hiển thị Loading Spinner -->
       <div v-if="isLoading" class="loading-spinner">Loading your orders...</div>
 
-      <!-- Hiển thị thông báo lỗi nếu có -->
       <div v-else-if="error" class="error-message">
         {{ error }}
         <router-link to="/menu" class="btn-back-to-menu"
@@ -15,7 +12,6 @@
         >
       </div>
 
-      <!-- Hiển thị khi không có đơn hàng nào -->
       <div v-else-if="orders.length === 0" class="empty-orders-message">
         <p>You haven't placed any orders yet.</p>
         <router-link to="/menu" class="btn-primary"
@@ -23,7 +19,6 @@
         >
       </div>
 
-      <!-- Hiển thị danh sách đơn hàng -->
       <div v-else class="orders-list">
         <div v-for="order in orders" :key="order._id" class="order-card">
           <div class="order-header">
@@ -49,7 +44,6 @@
             </p>
           </div>
           <div class="order-actions">
-            <!-- Nút xem chi tiết đơn hàng (sẽ xây dựng trang này sau) -->
             <router-link :to="`/orders/${order._id}`" class="btn-details"
               >View Details</router-link
             >
@@ -77,9 +71,8 @@ export default {
     ...mapGetters("user", ["isLoggedIn"]),
   },
   async created() {
-    // Kiểm tra đăng nhập trước khi fetch đơn hàng
     if (!this.isLoggedIn) {
-      alert("Bạn cần đăng nhập để xem đơn hàng của mình.");
+      alert("You need to login.");
       this.$router.push("/login");
       return;
     }
@@ -112,7 +105,6 @@ export default {
       return new Date(dateString).toLocaleDateString(undefined, options);
     },
     formatStatus(status) {
-      // Chuyển đổi trạng thái từ tiếng Anh sang tiếng Việt nếu cần, hoặc định dạng lại
       switch (status) {
         case "pending":
           return "Pending";
@@ -128,12 +120,11 @@ export default {
     },
   },
   watch: {
-    // Theo dõi thay đổi trạng thái đăng nhập để fetch đơn hàng lại
     isLoggedIn(newVal) {
       if (newVal) {
         this.fetchOrders();
       } else {
-        this.orders = []; // Xóa đơn hàng hiển thị nếu người dùng đăng xuất
+        this.orders = []; 
       }
     },
   },
@@ -141,7 +132,6 @@ export default {
 </script>
 
 <style scoped>
-/* CSS cho trang đơn hàng của tôi */
 .my-orders-page {
   background-color: var(--bg-light);
   padding: 40px 20px;
@@ -247,22 +237,22 @@ export default {
 
 .order-status.pending {
   background-color: #ffedcc;
-  color: #ffa500; /* Orange */
+  color: #ffa500; 
 }
 
 .order-status.processing {
   background-color: #d1ecf1;
-  color: #17a2b8; /* Blue */
+  color: #17a2b8; 
 }
 
 .order-status.completed {
   background-color: #d4edda;
-  color: #28a745; /* Green */
+  color: #28a745; 
 }
 
 .order-status.cancelled {
   background-color: #f8d7da;
-  color: #dc3545; /* Red */
+  color: #dc3545;
 }
 
 .order-details p {
@@ -295,7 +285,6 @@ export default {
   background-color: darken(#6c757d, 10%);
 }
 
-/* Responsive adjustments */
 @media (max-width: 768px) {
   .container {
     padding: 20px;

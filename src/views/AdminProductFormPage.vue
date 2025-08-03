@@ -1,17 +1,14 @@
-<!-- frontend/src/views/AdminProductFormPage.vue -->
 <template>
   <div class="admin-product-form-page">
     <div class="container">
       <h1>{{ isEditMode ? 'Edit Product' : 'Create New Product' }}</h1>
 
-      <!-- Hiển thị thông báo loading hoặc lỗi -->
       <div v-if="isLoading" class="loading-spinner">Loading product data...</div>
       <div v-else-if="error" class="error-message">
         {{ error }}
         <router-link to="/admin/products" class="btn-back-to-list">Back to Product List</router-link>
       </div>
 
-      <!-- Product Form -->
       <form v-else @submit.prevent="handleSubmit" class="product-form">
         <div class="form-group">
           <label for="name">Product Name:</label>
@@ -71,23 +68,23 @@
 <script>
 import apiClient from '@/helpers/api';
 import { mapGetters } from 'vuex';
-import Swal from 'sweetalert2'; // Import SweetAlert2
+import Swal from 'sweetalert2'; 
 
 export default {
   name: 'AdminProductFormPage',
-  props: ['id'], // Nhận product ID từ URL route khi ở chế độ chỉnh sửa
+  props: ['id'], 
   data() {
     return {
       product: {
         name: '',
         description: '',
         price: 0,
-        category: '', // Sẽ lưu _id của category
-        image: '/uploads/placeholder.jpg', // Mặc định ảnh placeholder
+        category: '', 
+        image: '/uploads/placeholder.jpg', 
         isFeatured: false,
       },
       categories: [],
-      selectedFile: null, // File ảnh được chọn
+      selectedFile: null, 
       isLoading: true,
       isLoadingCategories: true,
       isSubmitting: false,
@@ -97,11 +94,10 @@ export default {
   computed: {
     ...mapGetters('user', ['isAdmin']),
     isEditMode() {
-      return !!this.id; // Nếu có ID trong props, đây là chế độ chỉnh sửa
+      return !!this.id; 
     },
   },
   async created() {
-    // Kiểm tra quyền admin
     if (!this.isAdmin) {
       Swal.fire({
         icon: 'error',
@@ -114,18 +110,15 @@ export default {
       return;
     }
 
-    // Fetch categories trước tiên
     await this.fetchCategories();
 
-    // Nếu ở chế độ chỉnh sửa, fetch dữ liệu sản phẩm hiện có
     if (this.isEditMode) {
       await this.fetchProductDetails(this.id);
     } else {
-      this.isLoading = false; // Không cần loading nếu là tạo mới
+      this.isLoading = false; 
     }
   },
   methods: {
-    // Hàm để lấy URL hình ảnh đầy đủ từ backend
     getBackendImageUrl(imagePath) {
       const backendBaseUrl = apiClient.defaults.baseURL.replace('/api', '');
       if (!imagePath || imagePath === '/uploads/placeholder.jpg') {
@@ -137,7 +130,6 @@ export default {
       return `${backendBaseUrl}${imagePath.startsWith('/') ? '' : '/'}${imagePath}`;
     },
 
-    // Fetch danh sách danh mục
     async fetchCategories() {
       this.isLoadingCategories = true;
       try {
@@ -145,7 +137,7 @@ export default {
           this.categories = response.data;
         });
       } catch (err) {
-        console.error('Error fetching categories:', err); // Giữ console.error cho debug
+        console.error('Error fetching categories:', err); 
         this.error = err.response?.data?.message || 'Failed to load categories.';
         Swal.fire({
           icon: 'error',
@@ -158,19 +150,17 @@ export default {
       }
     },
 
-    // Fetch chi tiết sản phẩm khi ở chế độ chỉnh sửa
     async fetchProductDetails(productId) {
       this.isLoading = true;
       this.error = null;
       try {
         const response = await apiClient.get(`/products/${productId}`);
-        // Gán dữ liệu sản phẩm vào form. Đảm bảo category là _id
         this.product = {
           ...response.data,
-          category: response.data.category?._id || '', // Lấy _id của category
+          category: response.data.category?._id || '', 
         };
       } catch (err) {
-        console.error('Error fetching product details:', err); // Giữ console.error cho debug
+        console.error('Error fetching product details:', err); 
         this.error = err.response?.data?.message || 'Failed to load product details.';
         Swal.fire({
           icon: 'error',
@@ -183,35 +173,27 @@ export default {
       }
     },
 
-    // Xử lý khi chọn file ảnh
     handleImageUpload(event) {
       this.selectedFile = event.target.files[0];
       if (this.selectedFile) {
-        // Tạo URL tạm thời để hiển thị preview ảnh
         this.product.image = URL.createObjectURL(this.selectedFile);
       } else {
         this.product.image = '/uploads/placeholder.jpg';
       }
     },
 
-    // Xử lý gửi form
     async handleSubmit() {
       this.isSubmitting = true;
       this.error = null;
 
-      // Tạo FormData để gửi dữ liệu và file ảnh
       const formData = new FormData();
       for (const key in this.product) {
-        // Bỏ qua trường image nếu không có file mới được chọn và không phải placeholder
         if (key === 'image' && !this.selectedFile && this.isEditMode) {
-          // Trong chế độ edit, nếu không chọn file mới, không gửi trường 'image'
           continue; 
         }
-        // Nếu là image và có file mới, thì thêm file vào formData
         if (key === 'image' && this.selectedFile) {
           formData.append(key, this.selectedFile);
         } else if (key === 'category' && this.product[key]) {
-          // Đảm bảo gửi category ID
           formData.append(key, this.product[key]);
         }
         else if (key === 'price') {
@@ -227,10 +209,9 @@ export default {
 
       try {
         if (this.isEditMode) {
-          // Chế độ chỉnh sửa (PUT)
           await apiClient.put(`/products/${this.id}`, formData, {
             headers: {
-              'Content-Type': 'multipart/form-data', // Quan trọng khi gửi FormData
+              'Content-Type': 'multipart/form-data', 
             },
           });
           Swal.fire({
@@ -242,13 +223,12 @@ export default {
             timerProgressBar: true,
             confirmButtonColor: '#A0522D',
           }).then(() => {
-            this.$router.push('/admin/products'); // Chuyển hướng về danh sách sản phẩm
+            this.$router.push('/admin/products'); 
           });
         } else {
-          // Chế độ tạo mới (POST)
           await apiClient.post('/products', formData, {
             headers: {
-              'Content-Type': 'multipart/form-data', // Quan trọng khi gửi FormData
+              'Content-Type': 'multipart/form-data', 
             },
           });
           Swal.fire({
@@ -260,11 +240,11 @@ export default {
             timerProgressBar: true,
             confirmButtonColor: '#A0522D',
           }).then(() => {
-            this.$router.push('/admin/products'); // Chuyển hướng về danh sách sản phẩm
+            this.$router.push('/admin/products'); 
           });
         }
       } catch (err) {
-        console.error('Error saving product:', err); // Giữ console.error cho debug
+        console.error('Error saving product:', err); 
         this.error = err.response?.data?.message || 'Failed to save product. Server error.';
         Swal.fire({
           icon: 'error',
@@ -281,7 +261,6 @@ export default {
 </script>
 
 <style scoped>
-/* CSS cho trang form sản phẩm của Admin */
 .admin-product-form-page {
   background-color: var(--bg-light);
   padding: 40px 20px;
@@ -386,7 +365,7 @@ export default {
 }
 
 .form-group select {
-  appearance: none; /* Remove default select arrow */
+  appearance: none; 
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23A0522D'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 15px center;
@@ -403,7 +382,7 @@ export default {
 .checkbox-group input[type="checkbox"] {
   width: 20px;
   height: 20px;
-  accent-color: var(--primary-color); /* Color for checkbox */
+  accent-color: var(--primary-color); 
   cursor: pointer;
 }
 
@@ -499,7 +478,6 @@ export default {
   background-color: darken(#f0f0f0, 5%);
 }
 
-/* Responsive adjustments */
 @media (max-width: 768px) {
   .container {
     padding: 25px;

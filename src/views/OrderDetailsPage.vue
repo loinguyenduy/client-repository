@@ -1,15 +1,11 @@
-<!-- frontend/src/views/OrderDetailsPage.vue -->
 <template>
   <div class="order-details-page">
     <div class="container">
       <h1>Order Details</h1>
-
-      <!-- Hiển thị Loading Spinner -->
       <div v-if="isLoading" class="loading-spinner">
         Loading order details...
       </div>
 
-      <!-- Hiển thị thông báo lỗi nếu có -->
       <div v-else-if="error" class="error-message">
         {{ error }}
         <router-link to="/orders/myorders" class="btn-back-to-orders"
@@ -17,7 +13,6 @@
         >
       </div>
 
-      <!-- Hiển thị chi tiết đơn hàng -->
       <div v-else-if="order" class="order-detail-card">
         <div class="order-summary-header">
           <h2>Order #{{ order._id }}</h2>
@@ -27,7 +22,6 @@
         </div>
 
         <div class="order-sections">
-          <!-- Order Information -->
           <div class="order-info-section">
             <h3>Order Information</h3>
             <p>
@@ -41,18 +35,14 @@
             <p v-if="order.note"><strong>Note:</strong> {{ order.note }}</p>
           </div>
 
-          <!-- Shipping Information -->
           <div
             v-if="order.deliveryType === 'shipping'"
             class="shipping-info-section"
           >
             <h3>Shipping Address</h3>
             <p><strong>Address:</strong> {{ order.shippingAddress }}</p>
-            <!-- Giả định bạn có thể lấy số điện thoại từ user hoặc order -->
-            <!-- <p><strong>Phone:</strong> {{ order.user.phoneNumber || 'N/A' }}</p> -->
           </div>
 
-          <!-- Customer Information -->
           <div class="customer-info-section">
             <h3>Customer Information</h3>
             <p><strong>Name:</strong> {{ order.user.fullName }}</p>
@@ -60,7 +50,6 @@
           </div>
         </div>
 
-        <!-- Order Items -->
         <div class="order-items-section">
           <h3>Items in Order</h3>
           <div class="order-items-table">
@@ -92,7 +81,6 @@
           </div>
         </div>
 
-        <!-- Order Totals -->
         <div class="order-totals-section">
           <p>
             Subtotal: <span>${{ order.itemPrice.toFixed(2) }}</span>
@@ -125,7 +113,7 @@ import { mapGetters } from "vuex";
 
 export default {
   name: "OrderDetailsPage",
-  props: ["id"], // Nhận order ID từ URL route
+  props: ["id"], 
   data() {
     return {
       order: null,
@@ -140,20 +128,18 @@ export default {
     console.log(
       "OrderDetailsPage: Component created, Order ID from props:",
       this.id
-    ); // Debug log
-    // Kiểm tra đăng nhập trước khi fetch đơn hàng
+    ); 
     if (!this.isLoggedIn) {
       alert("Bạn cần đăng nhập để xem chi tiết đơn hàng.");
       this.$router.push("/login");
       return;
     }
     await this.fetchOrderDetails();
-    console.log("OrderDetailsPage: Order data after fetch:", this.order); // Debug log
-    console.log("OrderDetailsPage: isLoading after fetch:", this.isLoading); // Debug log
-    console.log("OrderDetailsPage: error after fetch:", this.error); // Debug log
+    console.log("OrderDetailsPage: Order data after fetch:", this.order); 
+    console.log("OrderDetailsPage: isLoading after fetch:", this.isLoading); 
+    console.log("OrderDetailsPage: error after fetch:", this.error); 
   },
   methods: {
-    // Hàm để lấy URL hình ảnh đầy đủ từ backend (tái sử dụng)
     getBackendImageUrl(imagePath) {
       const backendBaseUrl = apiClient.defaults.baseURL.replace("/api", "");
       if (!imagePath || imagePath === "/uploads/placeholder.jpg") {
@@ -167,23 +153,22 @@ export default {
       }${imagePath}`;
     },
 
-    // Lấy chi tiết đơn hàng từ backend
     async fetchOrderDetails() {
       this.isLoading = true;
       this.error = null;
       try {
         console.log(
           `OrderDetailsPage: Fetching order with ID: /orders/${this.id}`
-        ); // Debug log
+        ); 
         const response = await apiClient.get(`/orders/${this.id}`);
         this.order = response.data;
-        console.log("OrderDetailsPage: API response data:", response.data); // Debug log
+        console.log("OrderDetailsPage: API response data:", response.data); 
       } catch (err) {
-        console.error("OrderDetailsPage: Error fetching order details:", err); // Debug log
+        console.error("OrderDetailsPage: Error fetching order details:", err); 
         this.error =
           err.response?.data?.message ||
           "Failed to load order details. Order not found or server error.";
-        this.order = null; // Đảm bảo đơn hàng là null nếu có lỗi
+        this.order = null; 
       } finally {
         this.isLoading = false;
       }
@@ -214,20 +199,18 @@ export default {
     },
   },
   watch: {
-    // Theo dõi thay đổi của ID đơn hàng trong URL (nếu người dùng chuyển giữa các trang chi tiết đơn hàng)
     id: "fetchOrderDetails",
-    // Theo dõi thay đổi trạng thái đăng nhập để fetch đơn hàng lại
     isLoggedIn(newVal) {
       if (newVal) {
         console.log(
           "OrderDetailsPage: isLoggedIn changed to true, refetching order details..."
-        ); // Debug log
+        ); 
         this.fetchOrderDetails();
       } else {
         console.log(
           "OrderDetailsPage: isLoggedIn changed to false, clearing order details..."
-        ); // Debug log
-        this.order = null; // Xóa chi tiết đơn hàng nếu người dùng đăng xuất
+        ); 
+        this.order = null; 
       }
     },
   },
@@ -235,7 +218,6 @@ export default {
 </script>
 
 <style scoped>
-/* CSS cho trang chi tiết đơn hàng */
 .order-details-page {
   background-color: var(--bg-light);
   padding: 40px 20px;
@@ -311,22 +293,22 @@ export default {
 
 .order-status.pending {
   background-color: #ffedcc;
-  color: #ffa500; /* Orange */
+  color: #ffa500; 
 }
 
 .order-status.processing {
   background-color: #d1ecf1;
-  color: #17a2b8; /* Blue */
+  color: #17a2b8; 
 }
 
 .order-status.completed {
   background-color: #d4edda;
-  color: #28a745; /* Green */
+  color: #28a745; 
 }
 
 .order-status.cancelled {
   background-color: #f8d7da;
-  color: #dc3545; /* Red */
+  color: #dc3545; 
 }
 
 .order-sections {
@@ -394,7 +376,7 @@ export default {
 .table-header,
 .table-row {
   display: grid;
-  grid-template-columns: 3fr 1fr 1fr 1fr; /* Item, Qty, Price, Total */
+  grid-template-columns: 3fr 1fr 1fr 1fr; 
   gap: 15px;
   padding: 10px 0;
   border-bottom: 1px solid #eee;
@@ -444,7 +426,6 @@ export default {
   color: var(--accent-color);
 }
 
-/* Order Totals */
 .order-totals-section {
   background-color: #f9f9f9;
   border-radius: 10px;
@@ -499,7 +480,6 @@ export default {
   background-color: darken(#6c757d, 10%);
 }
 
-/* Responsive adjustments */
 @media (max-width: 768px) {
   .container {
     padding: 20px;
@@ -517,7 +497,7 @@ export default {
   }
   .order-items-table .table-header,
   .order-items-table .table-row {
-    grid-template-columns: 2fr 1fr 1fr 1fr; /* Điều chỉnh cột cho màn hình nhỏ */
+    grid-template-columns: 2fr 1fr 1fr 1fr; 
     font-size: 0.9em;
   }
   .col-item {
@@ -535,7 +515,7 @@ export default {
 @media (max-width: 576px) {
   .order-items-table .table-header,
   .order-items-table .table-row {
-    grid-template-columns: 1.5fr 0.8fr 0.8fr 1fr; /* Điều chỉnh thêm cho màn hình rất nhỏ */
+    grid-template-columns: 1.5fr 0.8fr 0.8fr 1fr; 
     font-size: 0.8em;
   }
 }

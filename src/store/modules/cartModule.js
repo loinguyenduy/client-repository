@@ -1,15 +1,14 @@
-// frontend/src/store/modules/cart.js
 
-import apiClient from '../../helpers/api'; // <-- SỬA ĐƯỜNG DẪN NÀY: Sử dụng alias @
+import apiClient from '../../helpers/api'; // 
 
 const cartModule = {
-  namespaced: true, // Quan trọng: Đảm bảo module này có namespace 'cart'
+  namespaced: true, 
 
   state: () => ({
-    cartItems: [], // Mảng chứa các sản phẩm trong giỏ hàng
-    totalPrice: 0, // Tổng giá trị giỏ hàng
-    isLoading: false, // Trạng thái loading cho các thao tác giỏ hàng
-    error: null, // Lưu trữ lỗi nếu có
+    cartItems: [], 
+    totalPrice: 0, 
+    isLoading: false, 
+    error: null,
   }),
 
   getters: {
@@ -25,7 +24,7 @@ const cartModule = {
     SET_CART_ITEMS(state, { cartItems, totalPrice }) {
       state.cartItems = cartItems;
       state.totalPrice = totalPrice;
-      state.error = null; // Xóa lỗi khi cập nhật thành công
+      state.error = null; 
     },
     ADD_ITEM_TO_LOCAL_CART(state, item) {
       const existingItemIndex = state.cartItems.findIndex(
@@ -80,7 +79,6 @@ const cartModule = {
   },
 
   actions: {
-    // Action để lấy giỏ hàng của người dùng từ backend
     async fetchCart({ commit }) {
       commit("SET_LOADING", true);
       try {
@@ -95,13 +93,12 @@ const cartModule = {
           "SET_ERROR",
           err.response?.data?.message || "Failed to fetch cart."
         );
-        commit("SET_CART_ITEMS", { cartItems: [], totalPrice: 0 }); // Đảm bảo giỏ hàng rỗng nếu có lỗi
+        commit("SET_CART_ITEMS", { cartItems: [], totalPrice: 0 }); 
       } finally {
         commit("SET_LOADING", false);
       }
     },
 
-    // Action để thêm sản phẩm vào giỏ hàng
     async addToCart({ commit, dispatch }, { productId, quantity }) {
       commit("SET_LOADING", true);
       try {
@@ -113,27 +110,24 @@ const cartModule = {
           cartItems: response.data.cartItem,
           totalPrice: response.data.totalPrice,
         });
-        // Sau khi thêm thành công, fetch lại giỏ hàng để đảm bảo đồng bộ
-        dispatch('fetchCart'); // <-- BỎ COMMENT DÒNG NÀY
-        return true; // Trả về true để biết thao tác thành công
+        dispatch('fetchCart');
+        return true; 
       } catch (err) {
         console.error("Error adding to cart:", err);
         commit(
           "SET_ERROR",
           err.response?.data?.message || "Failed to add product to cart."
         );
-        throw err; // Ném lỗi để component có thể bắt và hiển thị
+        throw err; 
       } finally {
         commit("SET_LOADING", false);
       }
     },
 
-    // Action để xóa sản phẩm khỏi giỏ hàng
     async removeFromCart({ commit, dispatch }, productId) {
       commit("SET_LOADING", true);
       try {
         await apiClient.delete(`/cart/remove/${productId}`);
-        // Sau khi xóa thành công, fetch lại giỏ hàng để cập nhật state
         dispatch("fetchCart");
         return true;
       } catch (err) {
@@ -148,7 +142,6 @@ const cartModule = {
       }
     },
 
-    // Action để cập nhật số lượng sản phẩm trong giỏ hàng
     async updateCartQuantity({ commit, dispatch }, { productId, quantity }) {
       commit("SET_LOADING", true);
       try {
@@ -159,7 +152,7 @@ const cartModule = {
           cartItems: response.data.cartItem,
           totalPrice: response.data.totalPrice,
         });
-        dispatch('fetchCart'); // <-- BỎ COMMENT DÒNG NÀY
+        dispatch('fetchCart'); 
         return true;
       } catch (err) {
         console.error("Error updating cart quantity:", err);
@@ -173,12 +166,11 @@ const cartModule = {
       }
     },
 
-    // Action để xóa toàn bộ giỏ hàng
     async clearCart({ commit }) {
       commit("SET_LOADING", true);
       try {
         await apiClient.delete("/cart/clear");
-        commit("CLEAR_LOCAL_CART"); // Xóa giỏ hàng cục bộ
+        commit("CLEAR_LOCAL_CART"); 
         return true;
       } catch (err) {
         console.error("Error clearing cart:", err);

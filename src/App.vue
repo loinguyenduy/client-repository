@@ -20,13 +20,11 @@
             <router-link to="/login" class="btn-login">Login</router-link>
             <router-link to="/register" class="btn-register">Register</router-link>
           </template>
-          <!-- Liên kết hiển thị khi người dùng ĐÃ đăng nhập -->
           <template v-else>
             <router-link to="/profile" class="nav-item user-profile-link">
-              <i class="fas fa-user-circle user-icon"></i> <!-- Biểu tượng người dùng -->
-              {{ userInfo?.fullName || 'Profile' }} <!-- Hiển thị tên đầy đủ hoặc 'Profile' -->
+              <i class="fas fa-user-circle user-icon"></i> 
+              {{ userInfo?.fullName || 'Profile' }} 
             </router-link>
-            <!-- Liên kết Admin chỉ hiển thị nếu người dùng là Admin -->
             <router-link v-if="isAdmin" to="/admin/dashboard" class="nav-item btn-admin">Admin Management</router-link>
             <button @click="confirmLogout" class="nav-item btn-logout">Logout</button>
           </template>
@@ -96,43 +94,37 @@
 
 <script>
 import { mapGetters, mapActions } from 'vuex';
-import Swal from 'sweetalert2'; // Import SweetAlert2
+import Swal from 'sweetalert2'; 
 
 export default {
   name: 'App',
   computed: {
-    // Ánh xạ các getters từ module 'user' của Vuex store
-    ...mapGetters('user', ['isLoggedIn', 'userRole', 'getUserInfo', 'isAdmin']), // Đã thêm 'isAdmin'
-    
-    // Lấy thông tin người dùng để hiển thị tên
+    ...mapGetters('user', ['isLoggedIn', 'userRole', 'getUserInfo', 'isAdmin']),
     userInfo() {
       return this.getUserInfo;
     },
-    // Computed property để lấy năm hiện tại cho footer
     currentYear() {
       return new Date().getFullYear();
     },
   },
   methods: {
-    // Ánh xạ action 'logout' từ module 'user' của Vuex store
     ...mapActions('user', ['logout']),
     
-    // Phương thức mới để xác nhận và xử lý đăng xuất
     async confirmLogout() {
       const result = await Swal.fire({
         title: 'Are you sure you want to log out?',
         text: 'You will be logged out of your account.',
         icon: 'question',
         showCancelButton: true,
-        confirmButtonColor: '#A0522D', // Màu sắc nút xác nhận
-        cancelButtonColor: '#6c757d', // Màu sắc nút hủy
+        confirmButtonColor: '#A0522D', 
+        cancelButtonColor: '#6c757d', 
         confirmButtonText: 'Yes, log me out!',
         cancelButtonText: 'Cancel',
       });
 
       if (result.isConfirmed) {
         try {
-          await this.logout(); // Gọi action logout từ Vuex
+          await this.logout(); 
           Swal.fire({
             icon: 'success',
             title: 'Logged Out!',
@@ -142,7 +134,7 @@ export default {
             timerProgressBar: true,
             confirmButtonColor: '#A0522D',
           });
-          this.$router.push('/'); // Chuyển hướng về trang chủ
+          this.$router.push('/'); 
         } catch (error) {
           console.error("Logout failed:", error);
           Swal.fire({
@@ -159,30 +151,27 @@ export default {
   },
   watch: {
     isLoggedIn(newVal) {
-      console.log('App.vue: isLoggedIn changed to:', newVal); // Debug log
+      console.log('App.vue: isLoggedIn changed to:', newVal); 
     }
   }
 }
 </script>
 
 <style>
-/* Import Font Awesome cho các biểu tượng (icons) */
 @import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css');
 
-/* CSS toàn cục và các biến CSS */
 :root {
-  --primary-color: #A0522D; /* Màu nâu đất ấm áp */
-  --accent-color: #FFD700; /* Màu vàng đồng để làm nổi bật */
+  --primary-color: #A0522D; 
+  --accent-color: #FFD700; 
   --text-color: #333;
   --light-text-color: #666;
-  --bg-light: #FDF5E6; /* Màu nền kem nhạt */
-  --bg-dark: #2C3E50; /* Màu nền tối cho footer */
+  --bg-light: #FDF5E6; 
+  --bg-dark: #2C3E50; 
   --border-color: #E0E0E0;
   --font-family-primary: 'Roboto', sans-serif;
-  --font-family-heading: 'Playfair Display', serif; /* Font chữ nghệ thuật cho tiêu đề/logo */
+  --font-family-heading: 'Playfair Display', serif; 
 }
 
-/* Reset CSS cơ bản */
 * {
   margin: 0;
   padding: 0;
@@ -208,14 +197,13 @@ body {
   padding: 0 20px;
 }
 
-/* --- Header Styling --- */
 .web-header {
   background-color: #fff;
   padding: 15px 0;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  position: sticky; /* Giữ header cố định khi cuộn */
+  position: sticky; 
   top: 0;
-  z-index: 1000; /* Đảm bảo header nằm trên các nội dung khác */
+  z-index: 1000; 
 }
 
 .web-header .container {
@@ -235,15 +223,15 @@ body {
 }
 
 .brand-logo .logo-img {
-  height: 80px; /* Kích thước logo */
+  height: 80px;
   margin-right: 10px;
-  border-radius: 50%; /* Bo tròn logo nếu là hình ảnh */
+  border-radius: 50%; 
 }
 
 .nav-bar {
   display: flex;
   align-items: center;
-  gap: 25px; /* Khoảng cách giữa các liên kết */
+  gap: 25px;
 }
 
 .nav-item {
@@ -253,7 +241,7 @@ body {
   padding: 8px 12px;
   border-radius: 5px;
   transition: all 0.3s ease;
-  white-space: nowrap; /* Ngăn không cho chữ xuống dòng */
+  white-space: nowrap; 
 }
 
 .nav-item:hover {
@@ -266,23 +254,20 @@ body {
   font-weight: bold;
 }
 
-/* Nút Đăng nhập/Đăng ký */
 .btn-login, .btn-register {
-  /* background-color: var(--primary-color); */
-  color: var(--text-color); /* Đảm bảo màu chữ ban đầu là màu tối */
-  padding: 8px 15px; /* Giữ padding để chúng trông như nút */
+  color: var(--text-color); 
+  padding: 8px 15px; 
   border-radius: 5px;
   text-decoration: none;
-  transition: all 0.3s ease; /* Sử dụng transition chung để chuyển đổi mượt mà */
+  transition: all 0.3s ease; 
   white-space: nowrap;
-  border: 1px solid transparent; /* Border trong suốt ban đầu */
+  border: 1px solid transparent; 
 }
 
 .btn-login:hover, .btn-register:hover {
   border: 1px solid var(--primary-color);
 }
 
-/* Link Hồ sơ người dùng */
 .user-profile-link {
   display: flex;
   align-items: center;
@@ -296,7 +281,6 @@ body {
   color: var(--accent-color);
 }
 
-/* Nút Admin */
 .btn-admin {
   background-color: var(--accent-color);
   color: var(--text-color);
@@ -308,7 +292,6 @@ body {
   background-color: darken(var(--accent-color), 10%);
 }
 
-/* Nút Đăng xuất */
 .btn-logout {
   background: none;
   border: 1px solid var(--light-text-color);
@@ -322,14 +305,12 @@ body {
   color: #fff;
 }
 
-/* --- Main Content Styling --- */
 .web-main {
   flex-grow: 1;
-  padding: 40px 0; /* Khoảng cách trên dưới cho nội dung chính */
+  padding: 40px 0;
   background-color: var(--bg-light);
 }
 
-/* --- Footer Styling --- */
 .web-footer {
   background-color: var(--bg-dark);
   color: #fff;
@@ -339,7 +320,7 @@ body {
 
 .footer-content {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); /* Chia cột responsive */
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: 30px;
   text-align: left;
 }
@@ -424,21 +405,19 @@ body {
 }
 
 .footer-map {
-  /* Đảm bảo nó chiếm không gian hợp lý trong grid */
-  /* Có thể điều chỉnh flex-basis hoặc max-width nếu cần */
 }
 
 .google-map-container-footer {
   width: 100%;
-  border-radius: 8px; /* Bo tròn góc cho container map */
-  overflow: hidden; /* Đảm bảo iframe không tràn ra ngoài */
-  box-shadow: 0 2px 10px rgba(0,0,0,0.2); /* Bóng cho map */
-  margin-top: 10px; /* Khoảng cách với tiêu đề "Find Us" */
+  border-radius: 8px; 
+  overflow: hidden; 
+  box-shadow: 0 2px 10px rgba(0,0,0,0.2); 
+  margin-top: 10px;
 }
 
 .google-map-container-footer iframe {
-  border-radius: 8px; /* Áp dụng border-radius cho iframe */
-  display: block; /* Loại bỏ khoảng trắng dưới iframe */
+  border-radius: 8px; 
+  display: block; 
 }
 
 .map-note-footer {
@@ -447,7 +426,6 @@ body {
   margin-top: 10px;
 }
 
-/* Responsive adjustments */
 @media (max-width: 768px) {
   .web-header .container {
     flex-direction: column;
@@ -461,7 +439,7 @@ body {
   }
 
   .footer-content {
-    grid-template-columns: 1fr; /* Một cột trên màn hình nhỏ */
+    grid-template-columns: 1fr;
     text-align: center;
   }
 

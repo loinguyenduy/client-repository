@@ -1,7 +1,5 @@
-<!-- frontend/src/views/HomePage.vue -->
 <template>
   <div class="home-page">
-    <!-- Hero Section -->
     <section class="hero-section">
       <div class="hero-content">
         <h1>Welcome to Viet Flavor</h1>
@@ -20,8 +18,6 @@
         />
       </div>
     </section>
-
-    <!-- About Section -->
     <section class="about-section content-section">
       <h2>About Us</h2>
           <div class="about-content-wrapper">
@@ -51,7 +47,6 @@
       </div>
     </section>
 
-    <!-- Featured Products Section -->
     <section class="featured-products-section content-section">
       <h2>Our Featured Dishes</h2>
       <div v-if="isLoadingFeatured" class="loading-spinner">
@@ -83,7 +78,6 @@
       </div>
     </section>
 
-    <!-- NEW: Why Choose Section -->
     <section class="why-choose-section content-section">
       <h2>Why Choose Viet Flavor?</h2>
       <div class="why-choose-grid">
@@ -119,24 +113,6 @@
         </div>
       </div>
     </section>
-
-    <!-- Google Map Section -->
-    <!-- <section class="map-section content-section">
-      <h2>Find Us Here</h2>
-      <div class="google-map-container">
-        <iframe
-          width="100%"
-          height="450"
-          frameborder="0"
-          style="border: 0"
-          allowfullscreen=""
-          loading="lazy"
-          referrerpolicy="no-referrer-when-downgrade"
-          src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3724.2134973252655!2d105.78781021191256!3d21.024141787854322!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3135ab9f983e67af%3A0x41721163aff0f497!2sChung%20c%C6%B0%20Golden%20Park!5e0!3m2!1svi!2s!4v1752768721711!5m2!1svi!2s"
-        ></iframe>
-      </div>
-      <p class="map-note">Click on the map for directions.</p>
-    </section> -->
   </div> 
 </template>
 
@@ -169,7 +145,6 @@ export default {
         this.isLoadingFeatured = false;
       }
     },
-    // Function to get the full image URL from the backend
     getBackendImageUrl(imagePath) {
       const backendBaseUrl = apiClient.defaults.baseURL.replace("/api", "");
       if (!imagePath || imagePath === "/uploads/placeholder.jpg") {
@@ -187,13 +162,11 @@ export default {
 </script>
 
 <style scoped>
-/* CSS cho trang chủ */
 .home-page {
   background-color: var(--bg-light);
   padding-bottom: 50px;
 }
 
-/* Hero Section */
 .hero-section {
   display: flex;
   justify-content: center;
@@ -254,7 +227,6 @@ export default {
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
 }
 
-/* Common Content Sections */
 .content-section {
   padding: 60px 5%;
   text-align: center;
@@ -267,7 +239,6 @@ export default {
   font-family: var(--font-family-heading);
 }
 
-/* About Section */
 .about-section p {
   max-width: 800px;
   margin: 0 auto;
@@ -276,7 +247,6 @@ export default {
   color: var(--text-color);
 }
 
-/* Featured Products Section */
 .featured-products-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -343,11 +313,10 @@ export default {
   margin-top: 20px;
 }
 
-/* NEW: Why Choose Section CSS */
 .why-choose-section {
   padding: 60px 5%;
   text-align: center;
-  background-color: #f8f8f8; /* Nền nhẹ để nổi bật */
+  background-color: #f8f8f8; 
 }
 
 .why-choose-section h2 {
@@ -399,38 +368,15 @@ export default {
   font-size: 1em;
   color: var(--light-text-color);
   line-height: 1.6;
-  margin-bottom: 0; /* Remove default paragraph margin */
+  margin-bottom: 0; 
 }
 
-/* Responsive adjustments for Why Choose Section */
 @media (max-width: 768px) {
   .why-choose-grid {
     grid-template-columns: 1fr;
   }
 }
 
-/* Map Section */
-/* .google-map-container {
-  width: 100%;
-  max-width: 1000px;
-  margin: 0 auto;
-  border-radius: 10px;
-  overflow: hidden;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-  margin-top: 20px;
-}
-
-.google-map-container iframe {
-  border-radius: 10px;
-}
-
-.map-note {
-  margin-top: 15px;
-  font-size: 0.9em;
-  color: var(--light-text-color);
-} */
-
-/* Responsive adjustments */
 @media (max-width: 768px) {
   .hero-section {
     flex-direction: column;
@@ -480,39 +426,37 @@ export default {
   flex: 1; 
   max-width: 500px; 
   border-radius: 10px; 
-  overflow: hidden; /* Đảm bảo ảnh bo góc đều */
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1); /* Thêm bóng nhẹ cho ảnh */
+  overflow: hidden; 
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1); 
 }
 
 .about-image img {
-  width: 100%; /* Đảm bảo ảnh chiếm toàn bộ chiều rộng của container */
-  height: 350px; /* Đặt chiều cao cố định cho ảnh (có thể điều chỉnh) */
-  object-fit: cover; /* Đảm bảo ảnh không bị méo và lấp đầy khung */
-  display: block; /* Loại bỏ khoảng trắng không mong muốn bên dưới ảnh */
+  width: 100%; 
+  height: 350px; 
+  object-fit: cover; 
+  display: block; 
 }
 
 .about-text {
-  flex: 1.2; /* Cho phép phần văn bản chiếm nhiều không gian hơn ảnh một chút */
+  flex: 1.2; 
 }
 
 .about-text p {
   font-size: 1.1em;
   line-height: 1.6;
   color: var(--text-color);
-  margin: 0; /* Loại bỏ margin mặc định của thẻ p để kiểm soát layout tốt hơn */
+  margin: 0; 
 }
-/* KẾT THÚC CHỈNH SỬA */
 
-/* Responsive cho About Section */
 @media (max-width: 768px) {
   .about-content-wrapper {
-    flex-direction: column; /* Trên màn hình nhỏ, chuyển sang xếp ảnh và text chồng lên nhau */
-    text-align: center; /* Căn giữa nội dung khi xếp chồng */
+    flex-direction: column;
+    text-align: center; 
   }
 
   .about-image {
-    max-width: 100%; /* Ảnh chiếm toàn bộ chiều rộng trên màn hình nhỏ */
-    margin-bottom: 30px; /* Thêm khoảng cách dưới ảnh khi xếp chồng */
+    max-width: 100%; 
+    margin-bottom: 30px; 
   }
 }
 </style>

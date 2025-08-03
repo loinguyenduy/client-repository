@@ -1,19 +1,15 @@
-<!-- frontend/src/views/AdminOrderDetailsPage.vue -->
 <template>
   <div class="admin-order-details-page">
     <div class="container">
       <h1>Order Details (Admin View)</h1>
 
-      <!-- Hiển thị Loading Spinner -->
       <div v-if="isLoading" class="loading-spinner">Loading order details...</div>
 
-      <!-- Hiển thị thông báo lỗi nếu có -->
       <div v-else-if="error" class="error-message">
         {{ error }}
         <router-link to="/admin/orders" class="btn-back-to-orders">Back to All Orders</router-link>
       </div>
 
-      <!-- Hiển thị chi tiết đơn hàng -->
       <div v-else-if="order" class="order-detail-card">
         <div class="order-summary-header">
           <h2>Order #{{ order._id }}</h2>
@@ -21,7 +17,6 @@
         </div>
 
         <div class="order-sections">
-          <!-- Order Information -->
           <div class="order-info-section">
             <h3>Order Information</h3>
             <p><strong>Order Date:</strong> {{ formatDate(order.createdAt) }}</p>
@@ -30,14 +25,12 @@
             <p v-if="order.note"><strong>Note:</strong> {{ order.note }}</p>
           </div>
 
-          <!-- Shipping Information -->
           <div v-if="order.deliveryType === 'shipping'" class="shipping-info-section">
             <h3>Shipping Address</h3>
             <p><strong>Recipient:</strong> {{ order.user?.fullName || 'N/A' }}</p>
             <p><strong>Address:</strong> {{ order.shippingAddress }}</p>
           </div>
           
-          <!-- Customer Information -->
           <div class="customer-info-section">
             <h3>Customer Information</h3>
             <p><strong>Name:</strong> {{ order.user?.fullName || 'N/A' }}</p>
@@ -45,7 +38,6 @@
           </div>
         </div>
 
-        <!-- Order Items -->
         <div class="order-items-section">
           <h3>Items in Order</h3>
           <div class="order-items-table">
@@ -67,7 +59,6 @@
           </div>
         </div>
 
-        <!-- Order Totals -->
         <div class="order-totals-section">
           <p>Subtotal: <span>${{ order.itemPrice.toFixed(2) }}</span></p>
           <p>Shipping: <span>${{ order.shippingPrice.toFixed(2) }}</span></p>
@@ -90,7 +81,7 @@ import { mapGetters } from 'vuex';
 
 export default {
   name: 'AdminOrderDetailsPage',
-  props: ['id'], // Nhận order ID từ URL route
+  props: ['id'], 
   data() {
     return {
       order: null,
@@ -99,11 +90,10 @@ export default {
     };
   },
   computed: {
-    ...mapGetters('user', ['isAdmin']), // Lấy trạng thái admin từ user module
+    ...mapGetters('user', ['isAdmin']), 
   },
   async created() {
     console.log('AdminOrderDetailsPage: Component created, Order ID from props:', this.id);
-    // Kiểm tra quyền admin trước khi fetch đơn hàng
     if (!this.isAdmin) {
       console.warn('AdminOrderDetailsPage: User is not admin. Redirecting.');
       alert('You are not authorized to view this page. Admin access required.');
@@ -116,7 +106,6 @@ export default {
     console.log('AdminOrderDetailsPage: error after fetch:', this.error);
   },
   methods: {
-    // Hàm để lấy URL hình ảnh đầy đủ từ backend (tái sử dụng)
     getBackendImageUrl(imagePath) {
       const backendBaseUrl = apiClient.defaults.baseURL.replace('/api', '');
       if (!imagePath || imagePath === '/uploads/placeholder.jpg') {
@@ -128,13 +117,12 @@ export default {
       return `${backendBaseUrl}${imagePath.startsWith('/') ? '' : '/'}${imagePath}`;
     },
 
-    // Lấy chi tiết đơn hàng từ backend (API dành cho admin)
     async fetchOrderDetails() {
       this.isLoading = true;
       this.error = null;
       try {
         console.log(`AdminOrderDetailsPage: Fetching order with ID: /admin/orders/${this.id}`);
-        const response = await apiClient.get(`/admin/orders/${this.id}`); // <-- Gọi API dành cho admin
+        const response = await apiClient.get(`/admin/orders/${this.id}`); 
         this.order = response.data;
         console.log('AdminOrderDetailsPage: API response data:', response.data);
       } catch (err) {
@@ -160,14 +148,11 @@ export default {
     }
   },
   watch: {
-    // Theo dõi thay đổi của ID đơn hàng trong URL
     id: 'fetchOrderDetails',
-    // Theo dõi thay đổi trạng thái admin để fetch đơn hàng lại hoặc chuyển hướng
     isAdmin(newVal) {
       if (newVal) {
         this.fetchOrderDetails();
       } else {
-        // Nếu không còn là admin, xóa dữ liệu và chuyển hướng
         this.order = null;
         this.$router.push('/');
       }
@@ -177,7 +162,6 @@ export default {
 </script>
 
 <style scoped>
-/* CSS cho trang chi tiết đơn hàng của Admin */
 .admin-order-details-page {
   background-color: var(--bg-light);
   padding: 40px 20px;
@@ -252,22 +236,22 @@ export default {
 
 .order-status.pending {
   background-color: #ffedcc;
-  color: #ffa500; /* Orange */
+  color: #ffa500; 
 }
 
 .order-status.processing {
   background-color: #d1ecf1;
-  color: #17a2b8; /* Blue */
+  color: #17a2b8; 
 }
 
 .order-status.completed {
   background-color: #d4edda;
-  color: #28a745; /* Green */
+  color: #28a745; 
 }
 
 .order-status.cancelled {
   background-color: #f8d7da;
-  color: #dc3545; /* Red */
+  color: #dc3545; 
 }
 
 .order-sections {
@@ -326,7 +310,7 @@ export default {
 
 .table-header, .table-row {
   display: grid;
-  grid-template-columns: 3fr 1fr 1fr 1fr; /* Item, Qty, Price, Total */
+  grid-template-columns: 3fr 1fr 1fr 1fr; 
   gap: 15px;
   padding: 10px 0;
   border-bottom: 1px solid #eee;
@@ -429,7 +413,6 @@ export default {
   background-color: darken(#6c757d, 10%);
 }
 
-/* Responsive adjustments */
 @media (max-width: 768px) {
   .container {
     padding: 20px;
@@ -447,7 +430,7 @@ export default {
   }
   .order-items-table .table-header,
   .order-items-table .table-row {
-    grid-template-columns: 2fr 1fr 1fr 1fr; /* Điều chỉnh cột cho màn hình nhỏ */
+    grid-template-columns: 2fr 1fr 1fr 1fr; 
     font-size: 0.9em;
   }
   .col-item {
@@ -465,7 +448,7 @@ export default {
 @media (max-width: 576px) {
   .order-items-table .table-header,
   .order-items-table .table-row {
-    grid-template-columns: 1.5fr 0.8fr 0.8fr 1fr; /* Điều chỉnh thêm cho màn hình rất nhỏ */
+    grid-template-columns: 1.5fr 0.8fr 0.8fr 1fr; 
     font-size: 0.8em;
   }
 }

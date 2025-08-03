@@ -1,4 +1,3 @@
-<!-- frontend/src/views/AdminProductListPage.vue -->
 <template>
   <div class="admin-product-list-page">
     <div class="container">
@@ -10,7 +9,6 @@
         </router-link>
       </div>
 
-      <!-- Display loading, error, or no products message -->
       <div v-if="isLoading" class="loading-spinner">Loading products...</div>
       <div v-else-if="error" class="error-message">
         {{ error }}
@@ -23,7 +21,6 @@
         </router-link>
       </div>
 
-      <!-- Products Table -->
       <div v-else class="products-table-container">
         <table class="products-table">
           <thead>
@@ -62,7 +59,6 @@
         </table>
       </div>
 
-      <!-- Pagination Controls -->
       <div v-if="totalPages > 1" class="pagination-controls">
         <button
           @click="changePage(currentPage - 1)"
@@ -89,7 +85,7 @@
 <script>
 import apiClient from '@/helpers/api';
 import { mapGetters } from 'vuex';
-import Swal from 'sweetalert2'; // Import SweetAlert2
+import Swal from 'sweetalert2'; 
 
 export default {
   name: 'AdminProductListPage',
@@ -98,17 +94,16 @@ export default {
       products: [],
       isLoading: true,
       error: null,
-      currentPage: 1,    // Current page number
-      totalPages: 1,     // Total number of pages
-      totalProducts: 0,  // Total number of products
-      limit: 10,         // Number of products per page
+      currentPage: 1,   
+      totalPages: 1,     
+      totalProducts: 0,  
+      limit: 10,         
     };
   },
   computed: {
-    ...mapGetters('user', ['isAdmin']), // Get admin status from user module
+    ...mapGetters('user', ['isAdmin']), 
   },
   async created() {
-    // Check admin rights before fetching products
     if (!this.isAdmin) {
       Swal.fire({
         icon: 'error',
@@ -116,14 +111,13 @@ export default {
         text: 'You are not authorized to view this page. Admin access required.',
         confirmButtonColor: '#A0522D',
       }).then(() => {
-        this.$router.push('/'); // Redirect to home page if not admin
+        this.$router.push('/'); 
       });
       return;
     }
     await this.fetchAllProducts();
   },
   methods: {
-    // Function to get the full image URL from the backend
     getBackendImageUrl(imagePath) {
       const backendBaseUrl = apiClient.defaults.baseURL.replace('/api', '');
       if (!imagePath || imagePath === '/uploads/placeholder.jpg') {
@@ -135,12 +129,10 @@ export default {
       return `${backendBaseUrl}${imagePath.startsWith('/') ? '' : '/'}${imagePath}`;
     },
 
-    // Fetch all products from the backend (for admin, including pagination)
     async fetchAllProducts() {
       this.isLoading = true;
       this.error = null;
       try {
-        // Call the unified /products API with pagination parameters
         const response = await apiClient.get(`/products?page=${this.currentPage}&limit=${this.limit}`); 
         
         this.products = response.data.products; 
@@ -165,23 +157,21 @@ export default {
       }
     },
 
-    // Function to change page
     changePage(page) {
       if (page >= 1 && page <= this.totalPages) {
         this.currentPage = page;
-        this.fetchAllProducts(); // Fetch products for the new page
+        this.fetchAllProducts(); 
       }
     },
 
-    // Confirm product deletion using SweetAlert2
     async confirmDelete(productId) {
       const result = await Swal.fire({
         title: 'Are you sure?',
         text: 'You are about to delete this product. This action cannot be undone!',
         icon: 'warning',
         showCancelButton: true,
-        confirmButtonColor: '#dc3545', // Red color for delete
-        cancelButtonColor: '#6c757d', // Grey color for cancel
+        confirmButtonColor: '#dc3545', 
+        cancelButtonColor: '#6c757d', 
         confirmButtonText: 'Yes, delete it!',
         cancelButtonText: 'No, cancel!',
       });
@@ -191,7 +181,6 @@ export default {
       }
     },
 
-    // Delete product
     async deleteProduct(productId) {
       this.isLoading = true;
       this.error = null;
@@ -208,8 +197,7 @@ export default {
           confirmButtonColor: '#A0522D',
         });
 
-        // After deletion, go back to the previous page if the current page becomes empty
-        // or re-fetch the current page if there are still products
+      
         if (this.products.length === 1 && this.currentPage > 1) {
             this.currentPage--;
         }
@@ -231,7 +219,6 @@ export default {
 </script>
 
 <style scoped>
-/* CSS for Admin Product List Page */
 .admin-product-list-page {
   background-color: var(--bg-light);
   padding: 40px 20px;
@@ -464,7 +451,6 @@ export default {
   font-weight: 500;
 }
 
-/* Responsive adjustments */
 @media (max-width: 768px) {
   .products-table th, .products-table td {
     padding: 8px 10px;

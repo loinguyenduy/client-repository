@@ -1,28 +1,22 @@
-<!-- frontend/src/views/CartPage.vue -->
 <template>
   <div class="cart-page">
     <div class="container">
       <h1>Your Shopping Cart</h1>
 
-      <!-- Hiển thị Loading Spinner -->
       <div v-if="isCartLoading" class="loading-spinner">Loading your cart...</div>
 
-      <!-- Hiển thị thông báo lỗi nếu có -->
       <div v-else-if="getCartError" class="error-message">
         {{ getCartError }}
         <router-link to="/menu" class="btn-back-to-menu">Back to Menu</router-link>
       </div>
 
-      <!-- Hiển thị giỏ hàng rỗng -->
       <div v-else-if="getCartItems.length === 0" class="empty-cart-message">
         <p>Your cart is empty. Start adding some delicious food!</p>
         <router-link to="/menu" class="btn-primary">Explore Menu</router-link>
       </div>
 
-      <!-- Hiển thị nội dung giỏ hàng -->
       <div v-else class="cart-content">
         <div class="cart-items-list">
-          <!-- ĐÃ SỬA: Sử dụng item._id làm key và thêm kiểm tra item.product -->
           <div v-for="item in getCartItems" :key="item._id" class="cart-item-card">
             <template v-if="item.product">
               <img :src="getBackendImageUrl(item.image)" :alt="item.name" class="cart-item-image" />
@@ -41,10 +35,8 @@
               </button>
             </template>
             <template v-else>
-              <!-- Hiển thị thông báo nếu sản phẩm không tồn tại -->
               <div class="invalid-cart-item">
                 <p>This item's product is no longer available or has been deleted.</p>
-                <!-- Nút xóa mục này khỏi giỏ hàng. Sử dụng item.product._id nếu có, nếu không thì dùng item._id -->
                 <button @click="handleRemoveFromCart(item.product ? item.product._id : item._id)" class="remove-item-button remove-invalid">
                   <i class="fas fa-trash-alt"></i> Remove Invalid Item
                 </button>
@@ -74,17 +66,14 @@
 <script>
 import apiClient from '@/helpers/api';
 import { mapGetters, mapActions } from 'vuex';
-import Swal from 'sweetalert2'; // Import SweetAlert2
-
+import Swal from 'sweetalert2'; 
 export default {
   name: 'CartPage',
   computed: {
-    // Ánh xạ các getters từ user và cart modules
     ...mapGetters('user', ['isLoggedIn']),
     ...mapGetters('cart', ['getCartItems', 'getCartTotal', 'isCartLoading', 'getCartError']),
   },
   async created() {
-    // Kiểm tra đăng nhập trước khi fetch giỏ hàng
     if (!this.isLoggedIn) {
       Swal.fire({
         icon: 'info',
@@ -96,13 +85,11 @@ export default {
       });
       return;
     }
-    await this.fetchCart(); // Fetch giỏ hàng khi component được tạo
+    await this.fetchCart(); 
   },
   methods: {
-    // Ánh xạ các actions từ cart module
     ...mapActions('cart', ['fetchCart', 'updateCartQuantity', 'removeFromCart', 'clearCart']),
 
-    // Hàm để lấy URL hình ảnh đầy đủ từ backend (tái sử dụng)
     getBackendImageUrl(imagePath) {
       const backendBaseUrl = apiClient.defaults.baseURL.replace('/api', '');
       if (!imagePath || imagePath === '/uploads/placeholder.jpg') {
@@ -114,11 +101,9 @@ export default {
       return `${backendBaseUrl}${imagePath.startsWith('/') ? '' : '/'}${imagePath}`;
     },
 
-    // Xử lý cập nhật số lượng
     async updateQuantity(productId, newQuantity) {
-      if (newQuantity < 1) newQuantity = 1; // Đảm bảo số lượng không nhỏ hơn 1
+      if (newQuantity < 1) newQuantity = 1; 
       
-      // Gọi action Vuex để cập nhật số lượng
       try {
         await this.updateCartQuantity({ productId, quantity: newQuantity });
       } catch (err) {
@@ -132,9 +117,7 @@ export default {
       }
     },
 
-    // Xử lý thay đổi số lượng từ input (khi người dùng tự gõ)
     handleQuantityChange(productId, newQuantity) {
-      // Đảm bảo giá trị là số nguyên dương
       newQuantity = parseInt(newQuantity);
       if (isNaN(newQuantity) || newQuantity < 1) {
         newQuantity = 1;
@@ -142,7 +125,6 @@ export default {
       this.updateQuantity(productId, newQuantity);
     },
 
-    // Xử lý xóa sản phẩm khỏi giỏ hàng
     async handleRemoveFromCart(productId) {
       Swal.fire({
         title: 'Are you sure?',
@@ -176,7 +158,6 @@ export default {
       });
     },
 
-    // Xử lý xóa toàn bộ giỏ hàng
     async handleClearCart() {
       Swal.fire({
         title: 'Are you sure?',
@@ -210,9 +191,7 @@ export default {
       });
     },
 
-    // Xử lý tiến hành thanh toán
     handleCheckout() {
-      // Kiểm tra xem giỏ hàng có rỗng không trước khi chuyển hướng
       if (this.getCartItems.length === 0) {
         Swal.fire({
           icon: 'info',
@@ -226,7 +205,6 @@ export default {
     },
   },
   watch: {
-    // Theo dõi thay đổi trạng thái đăng nhập để fetch giỏ hàng lại
     isLoggedIn(newVal) {
       if (newVal) {
         this.fetchCart();
@@ -237,7 +215,6 @@ export default {
 </script>
 
 <style scoped>
-/* CSS cho trang giỏ hàng */
 .cart-page {
   background-color: var(--bg-light);
   padding: 40px 20px;
@@ -304,8 +281,8 @@ export default {
 }
 
 .cart-items-list {
-  flex: 2; /* Chiếm nhiều không gian hơn */
-  min-width: 400px; /* Đảm bảo không quá nhỏ */
+  flex: 2; 
+  min-width: 400px; 
 }
 
 .cart-item-card {
@@ -398,7 +375,7 @@ export default {
 .remove-item-button {
   background: none;
   border: none;
-  color: #dc3545; /* Đỏ */
+  color: #dc3545;
   font-size: 1.5em;
   cursor: pointer;
   position: absolute;
@@ -411,7 +388,6 @@ export default {
   color: darken(#dc3545, 10%);
 }
 
-/* New style for invalid cart item */
 .invalid-cart-item {
   display: flex;
   flex-direction: column;
@@ -419,10 +395,10 @@ export default {
   justify-content: center;
   width: 100%;
   padding: 15px;
-  background-color: #fff3cd; /* Light yellow background */
-  border: 1px solid #ffc107; /* Orange border */
+  background-color: #fff3cd; 
+  border: 1px solid #ffc107; 
   border-radius: 8px;
-  color: #856404; /* Dark yellow text */
+  color: #856404; 
   text-align: center;
 }
 
@@ -432,9 +408,9 @@ export default {
 }
 
 .invalid-cart-item .remove-invalid {
-  position: static; /* Override absolute positioning */
+  position: static; 
   margin-top: 10px;
-  background-color: #dc3545; /* Red button */
+  background-color: #dc3545; 
   color: #fff;
   padding: 8px 15px;
   border-radius: 8px;
@@ -449,14 +425,14 @@ export default {
 
 
 .cart-summary {
-  flex: 1; /* Chiếm không gian còn lại */
+  flex: 1; 
   min-width: 300px;
   background-color: #f9f9f9;
   border: 1px solid var(--border-color);
   border-radius: 10px;
   padding: 25px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-  height: fit-content; /* Đảm bảo chiều cao vừa với nội dung */
+  height: fit-content; 
 }
 
 .cart-summary h2 {
@@ -500,7 +476,7 @@ export default {
 }
 
 .btn-clear-cart {
-  background-color: #ffc107; /* Màu vàng */
+  background-color: #ffc107; 
   color: #333;
   padding: 12px 20px;
   border: none;
@@ -531,7 +507,6 @@ export default {
   background-color: darken(var(--primary-color), 10%);
 }
 
-/* Responsive adjustments */
 @media (max-width: 768px) {
   .cart-items-list, .cart-summary {
     min-width: unset;

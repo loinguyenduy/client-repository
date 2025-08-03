@@ -1,10 +1,8 @@
-<!-- frontend/src/views/AdminCategoryListPage.vue -->
 <template>
   <div class="admin-category-list-page">
     <div class="container">
       <h1>Category Management</h1>
 
-      <!-- Form để thêm mới hoặc chỉnh sửa danh mục -->
       <form @submit.prevent="handleSubmit" class="category-form">
         <div class="form-group">
           <label for="categoryName">{{ isEditMode ? 'Edit Category Name:' : 'New Category Name:' }}</label>
@@ -20,7 +18,6 @@
         <div v-if="formError" class="form-error-message">{{ formError }}</div>
       </form>
 
-      <!-- Hiển thị thông báo loading hoặc lỗi khi fetch danh mục -->
       <div v-if="isLoading" class="loading-spinner">Loading categories...</div>
       <div v-else-if="error" class="error-message">
         {{ error }}
@@ -30,7 +27,6 @@
         No categories found. Add a new category above.
       </div>
 
-      <!-- Bảng danh sách danh mục -->
       <div v-else class="categories-table-container">
         <table class="categories-table">
           <thead>
@@ -63,29 +59,27 @@
 <script>
 import apiClient from '@/helpers/api';
 import { mapGetters } from 'vuex';
-import Swal from 'sweetalert2'; // Import SweetAlert2
-
+import Swal from 'sweetalert2'; 
 export default {
   name: 'AdminCategoryListPage',
   data() {
     return {
       categories: [],
       newCategoryName: '',
-      editingCategoryId: null, // ID của danh mục đang chỉnh sửa
+      editingCategoryId: null, 
       isLoading: true,
       isSubmitting: false,
       error: null,
-      formError: null, // Lỗi riêng cho form thêm/sửa
+      formError: null, 
     };
   },
   computed: {
     ...mapGetters('user', ['isAdmin']),
     isEditMode() {
-      return !!this.editingCategoryId; // Nếu có ID đang chỉnh sửa, đây là chế độ chỉnh sửa
+      return !!this.editingCategoryId; 
     },
   },
   async created() {
-    // Kiểm tra quyền admin
     if (!this.isAdmin) {
       Swal.fire({
         icon: 'error',
@@ -100,7 +94,6 @@ export default {
     await this.fetchAllCategories();
   },
   methods: {
-    // Lấy tất cả danh mục từ backend
     async fetchAllCategories() {
       this.isLoading = true;
       this.error = null;
@@ -108,7 +101,7 @@ export default {
         const response = await apiClient.get('/categories');
         this.categories = response.data;
       } catch (err) {
-        console.error('Error fetching categories:', err); // Giữ console.error cho debug
+        console.error('Error fetching categories:', err); 
         this.error = err.response?.data?.message || 'Failed to load categories. Server error.';
         Swal.fire({
           icon: 'error',
@@ -121,24 +114,21 @@ export default {
       }
     },
 
-    // Bắt đầu chỉnh sửa danh mục
     startEdit(category) {
       this.editingCategoryId = category._id;
       this.newCategoryName = category.name;
-      this.formError = null; // Xóa lỗi form cũ
+      this.formError = null; 
     },
 
-    // Hủy chỉnh sửa
     cancelEdit() {
       this.editingCategoryId = null;
       this.newCategoryName = '';
       this.formError = null;
     },
 
-    // Xử lý gửi form (Thêm mới hoặc Cập nhật)
     async handleSubmit() {
       this.isSubmitting = true;
-      this.formError = null; // Reset lỗi form
+      this.formError = null; 
 
       if (!this.newCategoryName.trim()) {
         this.formError = 'Category name cannot be empty.';
@@ -148,7 +138,6 @@ export default {
 
       try {
         if (this.isEditMode) {
-          // Chế độ chỉnh sửa (PUT)
           await apiClient.put(`/categories/${this.editingCategoryId}`, { name: this.newCategoryName });
           Swal.fire({
             icon: 'success',
@@ -160,7 +149,6 @@ export default {
             confirmButtonColor: '#A0522D',
           });
         } else {
-          // Chế độ tạo mới (POST)
           await apiClient.post('/categories', { name: this.newCategoryName });
           Swal.fire({
             icon: 'success',
@@ -172,11 +160,11 @@ export default {
             confirmButtonColor: '#A0522D',
           });
         }
-        this.newCategoryName = ''; // Xóa tên sau khi thêm/sửa thành công
-        this.editingCategoryId = null; // Thoát chế độ chỉnh sửa
-        await this.fetchAllCategories(); // Fetch lại danh sách
+        this.newCategoryName = ''; 
+        this.editingCategoryId = null; 
+        await this.fetchAllCategories(); 
       } catch (err) {
-        console.error('Error saving category:', err); // Giữ console.error cho debug
+        console.error('Error saving category:', err);
         this.formError = err.response?.data?.message || 'Failed to save category. Server error.';
         Swal.fire({
           icon: 'error',
@@ -189,15 +177,14 @@ export default {
       }
     },
 
-    // Xác nhận xóa danh mục bằng SweetAlert2
     async confirmDelete(categoryId) {
       const result = await Swal.fire({
         title: 'Are you sure?',
         text: 'You are about to delete this category. This action cannot be undone and may affect products linked to it!',
         icon: 'warning',
         showCancelButton: true,
-        confirmButtonColor: '#dc3545', // Red for delete
-        cancelButtonColor: '#6c757d', // Grey for cancel
+        confirmButtonColor: '#dc3545', 
+        cancelButtonColor: '#6c757d', 
         confirmButtonText: 'Yes, delete it!',
         cancelButtonText: 'No, cancel!',
       });
@@ -207,7 +194,6 @@ export default {
       }
     },
 
-    // Xóa danh mục
     async deleteCategory(categoryId) {
       this.isLoading = true; 
       this.error = null;
@@ -222,9 +208,9 @@ export default {
           timerProgressBar: true,
           confirmButtonColor: '#A0522D',
         });
-        await this.fetchAllCategories(); // Fetch lại danh sách sau khi xóa
+        await this.fetchAllCategories(); 
       } catch (err) {
-        console.error(`Error deleting category ${categoryId}:`, err); // Giữ console.error cho debug
+        console.error(`Error deleting category ${categoryId}:`, err); 
         this.error = err.response?.data?.message || 'Failed to delete category. Server error.';
         Swal.fire({
           icon: 'error',
@@ -241,7 +227,6 @@ export default {
 </script>
 
 <style scoped>
-/* CSS cho trang quản lý danh mục của Admin */
 .admin-category-list-page {
   background-color: var(--bg-light);
   padding: 40px 20px;
@@ -268,7 +253,6 @@ export default {
   font-family: var(--font-family-heading);
 }
 
-/* Form Styling */
 .category-form {
   margin-bottom: 40px;
   padding: 30px;
@@ -357,7 +341,6 @@ export default {
   font-size: 0.95em;
 }
 
-/* General Messages */
 .loading-spinner, .error-message, .no-categories-message {
   text-align: center;
   font-size: 1.2em;
@@ -391,7 +374,6 @@ export default {
   background-color: darken(#6c757d, 10%);
 }
 
-/* Table Styling */
 .categories-table-container {
   overflow-x: auto;
   margin-top: 40px;
@@ -467,7 +449,6 @@ export default {
   background-color: darken(#dc3545, 10%);
 }
 
-/* Responsive adjustments */
 @media (max-width: 768px) {
   .container {
     padding: 25px;

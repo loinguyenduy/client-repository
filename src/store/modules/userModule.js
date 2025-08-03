@@ -7,15 +7,11 @@ const userModule = {
     userInfo: localStorage.getItem("userInfo")
       ? JSON.parse(localStorage.getItem("userInfo"))
       : null,
-    // THAY ĐỔI: Thêm trường 'token' vào state để quản lý token một cách rõ ràng.
-    // Trước đây, token được lưu trong userInfo, giờ tách ra để quản lý độc lập.
     token: localStorage.getItem("token") || null, 
   }),
 
   getters: {
-    // THAY ĐỔI: Kiểm tra isLoggedIn dựa trên sự tồn tại của 'token' trong state.
     isLoggedIn: (state) => !!state.token, 
-    // THAY ĐỔI: Lấy token từ 'state.token'.
     userToken: (state) => state.token, 
     userRole: (state) => (state.userInfo ? state.userInfo.role : null),
     getUserInfo: (state) => state.userInfo,
@@ -31,8 +27,6 @@ const userModule = {
         localStorage.removeItem("userInfo");
       }
     },
-    // THAY ĐỔI: Thêm mutation mới để thiết lập token.
-    // Mutation này sẽ lưu token vào state và localStorage, đồng thời cập nhật Authorization header cho apiClient.
     SET_AUTH_TOKEN(state, token) {
       state.token = token;
       if (token) {
@@ -43,8 +37,7 @@ const userModule = {
         delete apiClient.defaults.headers.common['Authorization'];
       }
     },
-    // THAY ĐỔI: Cập nhật mutation CLEAR_USER_INFO để xóa cả userInfo và token.
-    // Đảm bảo dữ liệu xác thực được xóa sạch khỏi state và localStorage khi đăng xuất.
+
     CLEAR_USER_INFO(state) {
       state.userInfo = null;
       state.token = null; 
@@ -55,30 +48,21 @@ const userModule = {
   },
 
   actions: {
-    // THAY ĐỔI: Bỏ 'getters' khỏi destructuring vì chúng ta sẽ kiểm tra role trực tiếp từ 'data'.
     async login({ commit, dispatch }, { email, password }) { 
       try {
         const { data } = await apiClient.post("/users/login", {
           email,
           password,
         });
-
-        // THAY ĐỔI LỚN:
-        // 'data' từ API chính là đối tượng userInfo hoàn chỉnh.
-        commit("SET_USER_INFO", data); // Gán trực tiếp 'data' vào userInfo
-        commit("SET_AUTH_TOKEN", data.token); // Token vẫn nằm trong data.token
-
-        // Dispatch action từ module khác, cần root: true
+        commit("SET_USER_INFO", data); 
+        commit("SET_AUTH_TOKEN", data.token); 
         dispatch("cart/fetchCart", null, { root: true });
         
-        // THAY ĐỔI LỚN: Chuyển hướng người dùng dựa trên vai trò TRỰC TIẾP từ 'data.role'.
-        // Điều này đảm bảo vai trò được kiểm tra ngay lập tức và chính xác.
-        if (data.role === "admin") { // Kiểm tra trực tiếp data.role
-          router.push("/admin/dashboard"); // Chuyển hướng đến trang admin nếu là admin
+        if (data.role === "admin") { 
+          router.push("/admin/dashboard"); 
         } else {
-          router.push("/"); // Chuyển hướng đến trang chủ cho người dùng thường
+          router.push("/"); 
         }
-        
         return true;
       } catch (err) {
         console.error("Login failed: ", err);
@@ -90,16 +74,11 @@ const userModule = {
       }
     },
 
-    // THAY ĐỔI: Loại bỏ tham số destructuring rỗng ({}) để tránh lỗi ESLint 'no-empty-pattern'.
-    // Action này chỉ có nhiệm vụ gọi API đăng ký và không tự động đăng nhập người dùng.
+
     async register(context, userData) { 
       try {
         const { data } = await apiClient.post("/users/register", userData);
         console.log("Registration successful:", data.message);
-        // KHÔNG commit "SET_USER_INFO" hoặc "SET_AUTH_TOKEN" ở đây.
-        // KHÔNG dispatch "cart/fetchCart".
-        // KHÔNG router.push("/").
-        // Frontend (RegisterPage.vue) sẽ chịu trách nhiệm chuyển hướng đến trang login sau khi nhận được thành công.
         return true; 
       } catch (err) {
         console.error("Registration failed:", err);
@@ -122,7 +101,6 @@ const userModule = {
       try {
         const { data } = await apiClient.get("/users/profile");
         const currentInfo = getters.getUserInfo;
-        // Đảm bảo chỉ cập nhật userInfo, không thay đổi token (token được quản lý riêng)
         commit("SET_USER_INFO", { ...currentInfo, ...data }); 
       } catch (err) {
         console.error("Failed to fetch user profile:", err);

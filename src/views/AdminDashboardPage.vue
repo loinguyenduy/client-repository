@@ -1,4 +1,3 @@
-<!-- frontend/src/views/AdminDashboardPage.vue -->
 <template>
   <div class="admin-dashboard-page">
     <div class="container">
@@ -53,7 +52,6 @@ export default {
     ...mapGetters('user', ['isAdmin']),
   },
   created() {
-    // Bảo vệ trang: Nếu không phải admin, chuyển hướng về trang chủ
     if (!this.isAdmin) {
       alert('You are not authorized to view this page.');
       this.$router.push('/');
@@ -71,7 +69,6 @@ export default {
 </script>
 
 <style scoped>
-/* CSS cho trang Admin Dashboard */
 .admin-dashboard-page {
   background-color: var(--bg-light);
   padding: 40px 20px;
@@ -128,7 +125,7 @@ export default {
 .dashboard-card:hover {
   transform: translateY(-5px);
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-  background-color: #eef; /* Màu nền nhẹ khi hover */
+  background-color: #eef; 
 }
 
 .dashboard-card i {
@@ -188,7 +185,6 @@ export default {
   transform: translateY(-2px);
 }
 
-/* Responsive adjustments */
 @media (max-width: 768px) {
   .dashboard-grid {
     grid-template-columns: 1fr;
